@@ -7,8 +7,12 @@ var onconnect = function (payload) {
     webSocket.send(JSON.stringify({cmd: "subscribe"}));
 };
 var onmessage = function (payload) {
-    var logEvent = jQuery.parseJSON(payload.data);
-    prepend(logEvent);
+    var event = jQuery.parseJSON(payload.data);
+    if (event == "ping") {
+
+    } else {
+        prepend(event);
+    }
 };
 var onclose = function (payload) {
     setStatus("Closed.");

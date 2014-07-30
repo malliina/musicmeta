@@ -12,6 +12,7 @@ import play.api.mvc.WebSocket.FrameFormatter
 import rx.lang.scala.{Observable, Subscription}
 
 import scala.collection.JavaConversions._
+import scala.concurrent.duration.DurationLong
 
 /**
  *
@@ -24,6 +25,9 @@ trait StreamingLogController extends WebSocketController {
 
   private val subscriptions: collection.concurrent.Map[WebSocketClient, Subscription] =
     new ConcurrentHashMap[WebSocketClient, Subscription]()
+
+  // prevents connections being dropped after 30s of inactivity; i don't know how to modify that timeout
+  val pinger = Observable.interval(20.seconds).subscribe(_ => broadcast("ping"))
 
   val SUBSCRIBE = "subscribe"
   override type Client = WebSocketClient
@@ -52,6 +56,9 @@ trait StreamingLogController extends WebSocketController {
     subscriptions -= client
     writeLog(client, "disconnected")
   }
+
+  protected def broadcast(message: String) =
+    subscriptions.foreach(pair => pair._1.controlChannel push Json.toJson(message))
 
   private def writeLog(client: Client, suffix: String): Unit =
     log.info(s"User: ${client.user} from: ${client.request.remoteAddress} $suffix.")
