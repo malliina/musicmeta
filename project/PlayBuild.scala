@@ -10,7 +10,7 @@ object PlayBuild extends Build {
 
   val mleGroup = "com.github.malliina"
   val commonSettings = SbtNativePackager.packagerSettings ++ LinuxPlugin.debianSettings ++ Seq(
-    version := "0.1.2",
+    version := "0.1.3",
     scalaVersion := "2.11.2",
     retrieveManaged := false,
     fork in Test := true,

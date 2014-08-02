@@ -23,7 +23,13 @@ var onerror = function (payload) {
 };
 // case class LogEvent(timeStamp: Long, timeFormatted:String, message: String, loggerName: String, threadName: String, level: Level)
 var prepend = function (e) {
-    tableContent.prepend("<tr><td>" + e.timeFormatted + "</td><td>" + e.message + "</td><td>" + e.loggerName + "</td><td>" + e.level + "</td></tr>")
+    var trc;
+    if (e.level == "ERROR") {
+        trc = "danger";
+    } else {
+        trc = "";
+    }
+    tableContent.prepend("<tr class=" + trc + "><td>" + e.timeFormatted + "</td><td>" + e.message + "</td><td>" + e.loggerName + "</td><td>" + e.level + "</td></tr>")
 };
 var setStatus = function (newStatus) {
     document.getElementById("status").innerHTML = newStatus;
