@@ -34,9 +34,10 @@ object Home extends Controller with BaseSecurity with StreamingLogController wit
 
   def cover = Logged(SyncAction.async(request => {
     def message(msg: String) = s"From ${request.remoteAddress}: $msg"
+    def query(key: String) = (request getQueryString key).filter(_.nonEmpty)
     (for {
-      artist <- request getQueryString "artist" if artist.nonEmpty
-      album <- request getQueryString "album" if album.nonEmpty
+      artist <- query("artist")
+      album <- query("album")
     } yield {
       covers.cover(artist, album).map(path => {
         log info message(s"Serving cover: $artist - $album")
