@@ -2,7 +2,7 @@
     <conversionRule conversionWord="coloredLevel" converterClass="play.api.Logger$ColoredLevel"/>
     <appender name="RX" class="com.mle.logbackrx.BasicBoundedReplayRxAppender">
         <bufferSize>100</bufferSize>
-        <timeFormat>yyyy:MM:dd HH:mm:ss</timeFormat>
+        <timeFormat>yyyy-MM-dd HH:mm:ss</timeFormat>
     </appender>
     <appender name="FILE" class="ch.qos.logback.core.FileAppender">
         <file>${musicmeta.home}/logs/musicmeta.log</file>
