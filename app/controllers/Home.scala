@@ -1,5 +1,6 @@
 package controllers
 
+import java.net.ConnectException
 import java.nio.file.Paths
 
 import com.mle.http.{DiscoClient, Info}
@@ -24,6 +25,8 @@ object Home extends Controller with BaseSecurity with StreamingLogController wit
   val fallbackCoverDir = FileUtilities.tempDir / "covers"
   val coverDir = sys.props.get("cover.dir").fold(fallbackCoverDir)(path => Paths.get(path))
   val covers = new DiscoClient(Info.discoGsAuthReader.load, coverDir)
+  val messageKey = "message"
+  val logoutMessage = "You have successfully signed out."
   lazy val appender = LogbackUtils.getAppender[BasicBoundedReplayRxAppender]("RX")
 
   override def logEvents: Observable[LogEvent] = appender.logEvents
@@ -39,15 +42,19 @@ object Home extends Controller with BaseSecurity with StreamingLogController wit
       artist <- query("artist")
       album <- query("album")
     } yield {
+      val coverName = s"$artist - $album"
       covers.cover(artist, album).map(path => {
-        log info message(s"Serving cover: $artist - $album")
+        log info message(s"Serving cover: $coverName")
         Ok.sendFile(path.toFile)
       }).recover {
         case nse: NoSuchElementException =>
-          log info message(s"Unable to find cover: $artist - $album")
+          log info message(s"Unable to find cover: $coverName")
           NotFound
+        case ce: ConnectException =>
+          log.warn(message(s"Unable to search for cover: $coverName. Unable to connect to cover backend: ${ce.getMessage}"), ce)
+          BadGateway
         case t: Throwable =>
-          log.error(message(s"Failure while searching cover: $artist - $album"), t)
+          log.error(message(s"Failure while searching cover: $coverName"), t)
           InternalServerError
       }
     }).getOrElse(Future successful BadRequest)
@@ -59,7 +66,7 @@ object Home extends Controller with BaseSecurity with StreamingLogController wit
 
   def logout = AuthAction(implicit request => {
     Redirect(routes.Home.eject()).withNewSession.flashing(
-      "message" -> "You have successfully signed out."
+      messageKey -> logoutMessage
     )
   })
 

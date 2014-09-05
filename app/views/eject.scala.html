@@ -3,7 +3,7 @@
     @basePage("Goodbye!") {
         @util.div("container") {
             @bs.rowColumn("col-md-6") {
-                @flash.get("message").map { message =>
+                @flash.get(Home.messageKey).map { message =>
                     <p class="lead">@message</p>
                 }
                 <p>Try to <a href="@routes.Home.logs()">sign in</a> again.</p>
