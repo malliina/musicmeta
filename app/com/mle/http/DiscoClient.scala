@@ -3,6 +3,7 @@ package com.mle.http
 import java.io.Closeable
 import java.nio.file.{Files, Path}
 
+import com.mle.oauth.DiscoGsOAuthCredentials
 import com.mle.play.streams.Streams
 import com.mle.storage._
 import com.mle.util.Utils.executionContext

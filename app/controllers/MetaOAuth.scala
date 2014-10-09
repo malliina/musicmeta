@@ -1,21 +1,15 @@
 package controllers
 
-import com.mle.oauth.OAuthControl
-import play.api.mvc.{Call, Result}
+import com.mle.play.controllers.OAuthSecured
+import play.api.mvc.Call
 
 /**
  * @author Michael
  */
-trait MetaOAuth extends OAuthControl {
+trait MetaOAuth extends OAuthSecured {
   override def isAuthorized(email: String): Boolean = email == "malliina123@gmail.com"
 
   override def oAuthRedir: Call = routes.Home.redirResponse()
 
   override def onOAuthSuccess: Call = routes.Home.logs()
-
-  override def onOAuthUnauthorized(email: String): Result = ejectWith(unauthorizedMessage(email))
-
-  private def ejectWith(message: String) = Redirect(routes.Home.eject()).flashing(
-    "message" -> message
-  )
 }

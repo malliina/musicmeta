@@ -4,7 +4,7 @@ GET        /oauthcb             controllers.Home.redirResponse
 GET        /ping                controllers.Home.ping
 GET        /covers              controllers.Home.cover
 GET        /logs                controllers.Home.logs
-GET        /ws                  controllers.Home.openLogSocket
+GET        /ws                  controllers.Home.openSocket
 GET        /eject               controllers.Home.eject
 GET        /logout              controllers.Home.logout
 GET        /assets/*file        controllers.Assets.at(path = "/public", file)

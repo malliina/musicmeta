@@ -12,6 +12,7 @@ object BuildBuild extends Build {
     resolvers ++= Seq(
       "Typesafe repository" at "http://repo.typesafe.com/typesafe/releases/",
       "Typesafe ivy releases" at "http://repo.typesafe.com/typesafe/ivy-releases/",
+      "Sonatype releases" at "https://oss.sonatype.org/content/repositories/releases/",
       "Sonatype snapshots" at "http://oss.sonatype.org/content/repositories/snapshots/"
     ),
     scalacOptions ++= Seq("-unchecked", "-deprecation"),
@@ -20,7 +21,7 @@ object BuildBuild extends Build {
 
   def sbtPlugins = Seq(
     "com.github.malliina" %% "sbt-packager" % "1.2.2",
-    "com.github.malliina" %% "sbt-play" % "0.0.1"
+    "com.github.malliina" %% "sbt-play" % "0.1.0"
   ) map addSbtPlugin
 
   override lazy val projects = Seq(root)

@@ -3,16 +3,16 @@ package controllers
 import java.net.ConnectException
 import java.nio.file.Paths
 
-import com.mle.http.{DiscoClient, Info}
-import com.mle.logbackrx.{BasicBoundedReplayRxAppender, LogEvent, LogbackUtils}
-import com.mle.musicmeta.Starter
+import com.mle.file.{FileUtilities, StorageFile}
+import com.mle.http.DiscoClient
+import com.mle.logbackrx.{BasicBoundedReplayRxAppender, LogbackUtils}
+import com.mle.oauth.DiscoGsOAuthReader
 import com.mle.play.actions.Actions.SyncAction
 import com.mle.play.concurrent.ExecutionContexts.synchronousIO
-import com.mle.play.controllers.BaseSecurity
-import com.mle.util.FileImplicits.StorageFile
-import com.mle.util.{FileUtilities, Log}
+import com.mle.play.controllers.{BaseSecurity, LogStreaming}
+import com.mle.play.ws.SyncAuth
+import com.mle.util.Log
 import play.api.mvc._
-import rx.lang.scala.Observable
 import views.html
 
 import scala.concurrent.Future
@@ -21,15 +21,17 @@ import scala.concurrent.Future
  *
  * @author mle
  */
-object Home extends Controller with BaseSecurity with StreamingLogController with MetaOAuth with Log {
+object Home extends Controller with BaseSecurity with LogStreaming with MetaOAuth with SyncAuth with Log {
   val fallbackCoverDir = FileUtilities.tempDir / "covers"
   val coverDir = sys.props.get("cover.dir").fold(fallbackCoverDir)(path => Paths.get(path))
-  val covers = new DiscoClient(Info.discoGsAuthReader.load, coverDir)
-  val messageKey = "message"
-  val logoutMessage = "You have successfully signed out."
+  val covers = new DiscoClient(DiscoGsOAuthReader.load, coverDir)
   lazy val appender = LogbackUtils.getAppender[BasicBoundedReplayRxAppender]("RX")
 
-  override def logEvents: Observable[LogEvent] = appender.logEvents
+  override def openSocketCall: Call = routes.Home.openSocket()
+
+  override def startOAuth: Call = routes.Home.initiate()
+
+  override def ejectCall: Call = routes.Home.eject()
 
   def index = AuthAction(req => Ok(views.html.index()))
 
@@ -65,14 +67,6 @@ object Home extends Controller with BaseSecurity with StreamingLogController wit
   def eject = Logged(Action(implicit request => Ok(html.eject())))
 
   def logout = AuthAction(implicit request => {
-    Redirect(routes.Home.eject()).withNewSession.flashing(
-      messageKey -> logoutMessage
-    )
+    Redirect(routes.Home.eject()).withNewSession.flashing(messageKey -> logoutMessage)
   })
-
-  override protected def onUnauthorized(implicit req: RequestHeader): Result = Redirect(routes.Home.initiate())
-
-  override def validateCredentials(user: String, pass: String): Boolean = false
-
-  override def wsUrl(implicit request: RequestHeader): String = routes.Home.openLogSocket().webSocketURL(Starter.isHttpsAvailable)
 }
