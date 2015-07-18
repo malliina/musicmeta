@@ -16,9 +16,7 @@ object PlayBuild extends Build {
     retrieveManaged := false,
     fork in Test := true,
     resolvers ++= Seq(
-      Resolver.bintrayRepo("malliina", "maven")
-    ),
-    resolvers ++= Seq(
+      Resolver.bintrayRepo("malliina", "maven"),
       "Sonatype snapshots" at "http://oss.sonatype.org/content/repositories/snapshots/",
       "Sonatype releases" at "https://oss.sonatype.org/content/repositories/releases/"),
     libraryDependencies ++= Seq(
