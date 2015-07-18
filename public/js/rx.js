@@ -8,7 +8,7 @@ var onconnect = function (payload) {
 };
 var onmessage = function (payload) {
     var event = jQuery.parseJSON(payload.data);
-    if (event == "ping") {
+    if (event.event == "ping") {
 
     } else {
         prepend(event);
