@@ -11,7 +11,7 @@ object PlayBuild extends Build {
 
   val mleGroup = "com.github.malliina"
   val commonSettings = linuxSettings ++ Seq(
-    version := "1.1.0",
+    version := "1.1.1",
     scalaVersion := "2.11.7",
     retrieveManaged := false,
     fork in Test := true,
@@ -30,11 +30,9 @@ object PlayBuild extends Build {
     httpPort in Linux := Option("disabled"),
     httpsPort in Linux := Option("8457"),
     packager.Keys.maintainer := "Michael Skogberg <malliina123@gmail.com>",
-    javaOptions in Universal <<= (appHome in Linux, name in Linux).map((home, n) => {
-      Seq(
-        "-Dlogger.resource=logger.xml",
-        s"-Dcover.dir=${home getOrElse s"/opt/$n"}/covers"
-      )
-    })
+    javaOptions in Universal ++= Seq(
+      "-Dlogger.resource=logger.xml",
+      s"-Dcover.dir=${(appHome in Linux).value getOrElse s"/opt/${(name in Linux).value}"}/covers"
+    )
   )
 }
