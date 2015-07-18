@@ -15,10 +15,7 @@ object PlayBuild extends Build {
     scalaVersion := "2.11.7",
     retrieveManaged := false,
     fork in Test := true,
-    resolvers ++= Seq(
-      Resolver.bintrayRepo("malliina", "maven"),
-      "Sonatype snapshots" at "http://oss.sonatype.org/content/repositories/snapshots/",
-      "Sonatype releases" at "https://oss.sonatype.org/content/repositories/releases/"),
+    resolvers += Resolver.bintrayRepo("malliina", "maven"),
     libraryDependencies ++= Seq(
       mleGroup %% "util-play" % "2.0.1",
       mleGroup %% "play-base" % "0.5.1",
