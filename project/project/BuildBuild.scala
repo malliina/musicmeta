@@ -13,15 +13,16 @@ object BuildBuild extends Build {
       "Typesafe repository" at "http://repo.typesafe.com/typesafe/releases/",
       "Typesafe ivy releases" at "http://repo.typesafe.com/typesafe/ivy-releases/",
       "Sonatype releases" at "https://oss.sonatype.org/content/repositories/releases/",
-      "Sonatype snapshots" at "http://oss.sonatype.org/content/repositories/snapshots/"
+      Resolver.url("malliina bintray sbt", url("https://dl.bintray.com/malliina/sbt-plugins"))(Resolver.ivyStylePatterns)
     ),
     scalacOptions ++= Seq("-unchecked", "-deprecation"),
     incOptions := incOptions.value.withNameHashing(true)
   ) ++ sbtPlugins
 
   def sbtPlugins = Seq(
-    "com.github.malliina" %% "sbt-packager" % "1.2.2",
-    "com.github.malliina" %% "sbt-play" % "0.1.0"
+    "com.typesafe.play" % "sbt-plugin" % "2.4.2",
+    "com.github.malliina" %% "sbt-packager" % "1.8.0",
+    "com.github.malliina" %% "sbt-play" % "0.3.1"
   ) map addSbtPlugin
 
   override lazy val projects = Seq(root)

@@ -3,10 +3,10 @@ package com.mle.http
 import java.io.Closeable
 import java.nio.file.{Files, Path}
 
+import com.mle.concurrent.ExecutionContexts.cached
 import com.mle.oauth.DiscoGsOAuthCredentials
 import com.mle.play.streams.Streams
 import com.mle.storage._
-import com.mle.util.Utils.executionContext
 import com.ning.http.client.AsyncHttpClientConfig
 import play.api.libs.json.Json
 import play.api.libs.oauth.{ConsumerKey, OAuthCalculator, RequestToken}

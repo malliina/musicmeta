@@ -9,15 +9,15 @@
                     <span class="icon-bar"></span>
                     <span class="icon-bar"></span>
                 </button>
-                <a class="navbar-brand" href="@routes.Home.index()">MusicPimp</a>
+                <a class="navbar-brand" href="@routes.MetaOAuth.index()">MusicPimp</a>
             }
             @div("navbar-collapse collapse") {
                 <ul class="nav navbar-nav">
-                    @bs.navItem("Home", "home", tabName, routes.Home.index(), "home")
-                    @bs.navItem("Logs", "logs", tabName, routes.Home.logs(), "list")
+                    @bs.navItem("Home", "home", tabName, routes.MetaOAuth.index(), "home")
+                    @bs.navItem("Logs", "logs", tabName, routes.MetaOAuth.logs(), "list")
                 </ul>
                 <ul class="nav navbar-nav navbar-right">
-                    <li><a href="@routes.Home.logout()">Logout</a></li>
+                    <li><a href="@routes.MetaOAuth.logout()">Logout</a></li>
                 </ul>
             }
         }

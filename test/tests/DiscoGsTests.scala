@@ -1,14 +1,14 @@
 package tests
 
+import com.mle.concurrent.ExecutionContexts.cached
 import com.mle.file.FileUtilities
 import com.mle.http.DiscoClient
 import com.mle.oauth.DiscoGsOAuthReader
-import com.mle.util.Utils.executionContext
 import org.scalatest.FunSuite
 import org.scalatestplus.play.OneAppPerSuite
 
 import scala.concurrent.Await
-import scala.concurrent.duration._
+import scala.concurrent.duration.DurationInt
 
 /**
  *
@@ -22,7 +22,7 @@ class DiscoGsTests extends FunSuite with OneAppPerSuite {
     val result = client.downloadCover("Iron Maiden", "Powerslave").map(p => s"Downloaded to $p").recover {
       case t => s"Failure: $t"
     }
-    val r = Await.result(result, 5 seconds)
+    val r = Await.result(result, 5.seconds)
     println(r)
   }
 }

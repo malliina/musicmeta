@@ -1,10 +1,10 @@
-GET        /                    controllers.Home.index
-GET        /oauth               controllers.Home.initiate
-GET        /oauthcb             controllers.Home.redirResponse
-GET        /ping                controllers.Home.ping
-GET        /covers              controllers.Home.cover
-GET        /logs                controllers.Home.logs
-GET        /ws                  controllers.Home.openSocket
-GET        /eject               controllers.Home.eject
-GET        /logout              controllers.Home.logout
+GET        /                    controllers.MetaOAuth.index
+GET        /logs                controllers.MetaOAuth.logs
+GET        /oauth               controllers.MetaOAuth.initiate
+GET        /oauthcb             controllers.MetaOAuth.redirResponse
+GET        /eject               controllers.MetaOAuth.eject
+GET        /logout              controllers.MetaOAuth.logout
+GET        /ping                controllers.Covers.ping
+GET        /covers              controllers.Covers.cover
+GET        /ws                  controllers.Sockets.openSocket
 GET        /assets/*file        controllers.Assets.at(path = "/public", file)
