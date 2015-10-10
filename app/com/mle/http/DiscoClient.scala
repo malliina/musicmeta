@@ -1,7 +1,9 @@
 package com.mle.http
 
 import java.io.Closeable
+import java.nio.charset.Charset
 import java.nio.file.{Files, Path}
+import java.security.MessageDigest
 
 import com.mle.concurrent.ExecutionContexts.cached
 import com.mle.oauth.DiscoGsOAuthCredentials
@@ -9,6 +11,8 @@ import com.mle.play.streams.Streams
 import com.mle.storage._
 import com.mle.util.Log
 import com.ning.http.client.AsyncHttpClientConfig
+import org.apache.commons.codec.binary.Hex
+import org.apache.commons.codec.digest.DigestUtils
 import play.api.http.HeaderNames
 import play.api.libs.json.Json
 import play.api.libs.oauth.{ConsumerKey, OAuthCalculator, RequestToken}
@@ -57,7 +61,11 @@ class DiscoClient(credentials: DiscoGsOAuthCredentials, coverDir: Path) extends 
     authenticated(url).get(headers => Streams.fileWriter(file)).flatMap(_.run).map(_.bytes)
   }
 
-  protected def coverFile(artist: String, album: String): Path = coverDir resolve s"$artist-$album.jpg"
+  protected def coverFile(artist: String, album: String): Path = {
+    // avoids platform-specific file system encoding nonsense
+    val hash = DigestUtils.md5Hex(s"$artist-$album")
+    coverDir resolve s"$hash.jpg"
+  }
 
   /**
    * Downloads the album cover of `artist`s `album`.
@@ -98,7 +106,7 @@ class DiscoClient(credentials: DiscoGsOAuthCredentials, coverDir: Path) extends 
 
   private def authenticated(url: String): WSRequest = {
     log debug s"Preparing authenticated request to $url"
-//    WS.clientUrl(url) sign signer
+    //    WS.clientUrl(url) sign signer
     WS.clientUrl(url).withHeaders(HeaderNames.AUTHORIZATION -> s"Discogs key=$consumerKey, secret=$consumerSecret")
   }
 

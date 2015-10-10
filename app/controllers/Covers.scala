@@ -32,14 +32,14 @@ object Covers extends Controller with Log {
     } yield {
         val coverName = s"$artist - $album"
         covers.cover(artist, album).map(path => {
-          log info message(s"Serving cover: $coverName")
+          log info message(s"Serving cover $coverName at $path")
           Ok.sendFile(path.toFile)
         }).recover {
           case cnfe: CoverNotFoundException =>
-            log info message(s"Unable to find cover: $coverName")
+            log info message(s"Unable to find cover $coverName")
             NotFound
           case nse: NoSuchElementException =>
-            log info message(s"Unable to find cover: $coverName")
+            log info message(s"Unable to find cover $coverName")
             NotFound
           case re: ResponseException =>
             log.error(s"Invalid response recieved", re)
@@ -48,7 +48,7 @@ object Covers extends Controller with Log {
             log.warn(message(s"Unable to search for cover: $coverName. Unable to connect to cover backend: ${ce.getMessage}"), ce)
             BadGateway
           case t: Throwable =>
-            log.error(message(s"Failure while searching cover: $coverName"), t)
+            log.error(message(s"Failure while searching cover $coverName"), t)
             InternalServerError
         }
       }).getOrElse(Future successful BadRequest)
