@@ -7,11 +7,13 @@ import com.mle.concurrent.ExecutionContexts.cached
 import com.mle.oauth.DiscoGsOAuthCredentials
 import com.mle.play.streams.Streams
 import com.mle.storage._
+import com.mle.util.Log
 import com.ning.http.client.AsyncHttpClientConfig
+import play.api.http.HeaderNames
 import play.api.libs.json.Json
 import play.api.libs.oauth.{ConsumerKey, OAuthCalculator, RequestToken}
 import play.api.libs.ws.ning.NingWSClient
-import play.api.libs.ws.{WS, WSResponse}
+import play.api.libs.ws.{WSRequest, WS, WSResponse}
 
 import scala.concurrent.Future
 
@@ -19,12 +21,11 @@ import scala.concurrent.Future
 /**
  * @author mle
  */
-class DiscoClient(credentials: DiscoGsOAuthCredentials, coverDir: Path) extends Closeable {
+class DiscoClient(credentials: DiscoGsOAuthCredentials, coverDir: Path) extends Log with Closeable {
   Files.createDirectories(coverDir)
   implicit val client = new NingWSClient(new AsyncHttpClientConfig.Builder().build())
-  val key = ConsumerKey(credentials.consumerKey, credentials.consumerSecret)
-  val accessToken = RequestToken(credentials.accessToken, credentials.accessTokenSecret)
-  val signer = OAuthCalculator(key, accessToken)
+  val consumerKey = credentials.consumerKey
+  val consumerSecret = credentials.consumerSecret
   val iLoveDiscoGsFakeCoverSize = 15378
 
   /**
@@ -53,7 +54,7 @@ class DiscoClient(credentials: DiscoGsOAuthCredentials, coverDir: Path) extends 
    * @see  http://www.playframework.com/documentation/2.3.x/ScalaWS
    */
   protected def downloadFile(url: String, file: Path): Future[StorageSize] = {
-    signedRequest(url).get(headers => Streams.fileWriter(file)).flatMap(_.run).map(_.bytes)
+    authenticated(url).get(headers => Streams.fileWriter(file)).flatMap(_.run).map(_.bytes)
   }
 
   protected def coverFile(artist: String, album: String): Path = coverDir resolve s"$artist-$album.jpg"
@@ -82,27 +83,40 @@ class DiscoClient(credentials: DiscoGsOAuthCredentials, coverDir: Path) extends 
       bytes <- downloadFile(url, file)
     } yield file
 
+  private def getAlbumIdContent(url: String): Future[Long] =
+    downloadString(url).map(content => albumId(content)
+      .getOrElse(throw new CoverNotFoundException(s"Unable to find album id from response: $content")))
+
+  private def getCoverUrl(id: Long): Future[String] =
+    downloadString(albumUrl(id)).map(content => coverUrl(content)
+      .getOrElse(throw new CoverNotFoundException(s"Unable to find cover art URL from response: $content")))
+
   private def downloadString(url: String): Future[String] = getResponse(url) map (_.body)
 
-  private def getResponse(url: String): Future[WSResponse] = signedRequest(url).get()
+  private def getResponse(url: String): Future[WSResponse] = authenticated(url).get()
+    .flatMap(r => validate(r, url).fold(Future.successful(r))(Future.failed))
 
-  private def signedRequest(url: String) = WS.clientUrl(url) sign signer
+  private def authenticated(url: String): WSRequest = {
+    log debug s"Preparing authenticated request to $url"
+//    WS.clientUrl(url) sign signer
+    WS.clientUrl(url).withHeaders(HeaderNames.AUTHORIZATION -> s"Discogs key=$consumerKey, secret=$consumerSecret")
+  }
 
   private def albumIdUrl(artist: String, album: String): String = {
     val artistEnc = WebUtils.encodeURIComponent(artist)
     val albumEnc = WebUtils.encodeURIComponent(album)
-    s"http://api.discogs.com/database/search?artist=$artistEnc&release_title=$albumEnc"
+    s"https://api.discogs.com/database/search?artist=$artistEnc&release_title=$albumEnc"
   }
 
-  private def albumUrl(albumId: Long) = s"http://api.discogs.com/releases/$albumId"
+  private def albumUrl(albumId: Long) = s"https://api.discogs.com/releases/$albumId"
 
-  private def getAlbumIdContent(url: String): Future[Long] =
-    downloadString(url).map(content => albumId(content)
-      .getOrElse(throw new NoSuchElementException(s"Unable to find album id from response: $content")))
-
-  private def getCoverUrl(id: Long): Future[String] =
-    downloadString(albumUrl(id)).map(content => coverUrl(content)
-      .getOrElse(throw new NoSuchElementException(s"Unable to find cover art URL from response: $content")))
+  private def validate(wsResponse: WSResponse, url: String): Option[Exception] = {
+    val code = wsResponse.status
+    code match {
+      case c if (c >= 200 && c < 300) || c == 404 => None
+      case _ => Option(new ResponseException(wsResponse, url))
+    }
+  }
 
   import com.mle.http.DiscoClient._
 
@@ -121,4 +135,3 @@ object DiscoClient {
   val IMAGES = "images"
   val URI = "uri"
 }
-

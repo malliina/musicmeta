@@ -28,4 +28,3 @@ object BuildBuild extends Build {
   override lazy val projects = Seq(root)
   lazy val root = Project("plugins", file("."))
 }
-

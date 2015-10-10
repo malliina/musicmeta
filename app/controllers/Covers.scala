@@ -5,7 +5,7 @@ import java.nio.file.Paths
 
 import com.mle.concurrent.ExecutionContexts.cached
 import com.mle.file.{FileUtilities, StorageFile}
-import com.mle.http.DiscoClient
+import com.mle.http.{ResponseException, CoverNotFoundException, DiscoClient}
 import com.mle.oauth.DiscoGsOAuthReader
 import com.mle.play.actions.Actions.SyncAction
 import com.mle.util.Log
@@ -35,9 +35,15 @@ object Covers extends Controller with Log {
           log info message(s"Serving cover: $coverName")
           Ok.sendFile(path.toFile)
         }).recover {
+          case cnfe: CoverNotFoundException =>
+            log info message(s"Unable to find cover: $coverName")
+            NotFound
           case nse: NoSuchElementException =>
             log info message(s"Unable to find cover: $coverName")
             NotFound
+          case re: ResponseException =>
+            log.error(s"Invalid response recieved", re)
+            BadGateway
           case ce: ConnectException =>
             log.warn(message(s"Unable to search for cover: $coverName. Unable to connect to cover backend: ${ce.getMessage}"), ce)
             BadGateway

@@ -15,7 +15,7 @@ import scala.concurrent.{Await, Future}
  * @author Michael
  */
 class APITests extends FunSuite with OneServerPerSuite with Results {
-  implicit val timeout = 5.seconds
+  implicit val timeout = 20.seconds
 
   test("responds to ping") {
     verifyActionResponse(Covers.ping, http.Status.OK)

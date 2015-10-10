@@ -9,6 +9,7 @@ import org.scalatestplus.play.OneAppPerSuite
 
 import scala.concurrent.Await
 import scala.concurrent.duration.DurationInt
+import com.mle.concurrent.FutureOps
 
 /**
  *
@@ -19,10 +20,14 @@ class DiscoGsTests extends FunSuite with OneAppPerSuite {
 
   test("can download cover") {
     val client = new DiscoClient(DiscoGsOAuthReader.load, FileUtilities.tempDir)
-    val result = client.downloadCover("Iron Maiden", "Powerslave").map(p => s"Downloaded to $p").recover {
-      case t => s"Failure: $t"
-    }
-    val r = Await.result(result, 5.seconds)
-    println(r)
+    val result = client.downloadCover("Iron Maiden", "Powerslave")
+      .map(p => s"Downloaded to $p")
+      .recoverAll(t => s"Failure: $t")
+    val r = Await.result(result, 20.seconds)
+    assert(r startsWith "Downloaded")
+  }
+
+  test("retrieve access token") {
+
   }
 }
