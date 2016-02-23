@@ -1,13 +1,18 @@
 package controllers
 
-import com.mle.play.controllers.OAuthSecured
-import play.api.mvc.{Action, Call}
+import com.malliina.play.controllers.OAuthSecured
+import play.api.libs.concurrent.Execution.Implicits.defaultContext
+import play.api.libs.json.JsValue
+import play.api.mvc.{Action, Call, WebSocket}
 import views.html
 
-/**
- * @author Michael
- */
-object MetaOAuth extends OAuthSecured {
+object MetaOAuth {
+  val MessageKey = "message"
+}
+
+class MetaOAuth extends OAuthSecured {
+  val streamer = new LogStreamer(req => authenticate(req).map(_.get))
+
   override def isAuthorized(email: String): Boolean = email == "malliina123@gmail.com"
 
   override def startOAuth: Call = routes.MetaOAuth.initiate()
@@ -18,9 +23,11 @@ object MetaOAuth extends OAuthSecured {
 
   override def ejectCall: Call = routes.MetaOAuth.eject()
 
+  def openSocket: WebSocket[JsValue, JsValue] = streamer.openSocket
+
   def index = AuthAction(_ => Ok(views.html.index()))
 
-  def logs = AuthAction(implicit request => Ok(views.html.logs()))
+  def logs = AuthAction(implicit request => Ok(views.html.logs(None, streamer)))
 
   def eject = Logged(Action(implicit request => Ok(html.eject())))
 

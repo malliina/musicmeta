@@ -6,5 +6,5 @@ GET        /eject               controllers.MetaOAuth.eject
 GET        /logout              controllers.MetaOAuth.logout
 GET        /ping                controllers.Covers.ping
 GET        /covers              controllers.Covers.cover
-GET        /ws                  controllers.Sockets.openSocket
+GET        /ws                  controllers.MetaOAuth.openSocket
 GET        /assets/*file        controllers.Assets.at(path = "/public", file)

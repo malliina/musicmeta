@@ -3,7 +3,7 @@
     @basePage("Goodbye!") {
         @util.div("container") {
             @bs.rowColumn("col-md-6") {
-                @flash.get(MetaOAuth.messageKey).map { message =>
+                @flash.get(MetaOAuth.MessageKey).map { message =>
                     <p class="lead">@message</p>
                 }
                 <p>Try to <a href="@routes.MetaOAuth.logs()">sign in</a> again.</p>

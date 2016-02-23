@@ -1,25 +1,25 @@
-import com.mle.sbt.unix.LinuxKeys._
-import com.mle.sbt.unix.LinuxPlugin
-import com.mle.sbtutils.SbtProjects
+import com.malliina.sbt.unix.LinuxKeys._
+import com.malliina.sbt.unix.LinuxPlugin
+import com.malliina.sbtplay.PlayProject
 import com.typesafe.sbt.SbtNativePackager.{Linux, Universal}
 import com.typesafe.sbt.packager
+import play.sbt.PlayImport
 import sbt.Keys._
 import sbt._
 
 object PlayBuild extends Build {
-  lazy val p = SbtProjects.testableProject("musicmeta").settings(commonSettings: _*).enablePlugins(play.sbt.PlayScala)
+  lazy val p = PlayProject("musicmeta").settings(commonSettings: _*).enablePlugins(play.sbt.PlayScala)
 
-  val mleGroup = "com.github.malliina"
+  val malliinaGroup = "com.malliina"
   val commonSettings = linuxSettings ++ Seq(
-    version := "1.2.1",
+    version := "1.3.0",
     scalaVersion := "2.11.7",
     retrieveManaged := false,
     fork in Test := true,
     resolvers += Resolver.bintrayRepo("malliina", "maven"),
     libraryDependencies ++= Seq(
-      mleGroup %% "util-play" % "2.0.1",
-      mleGroup %% "play-base" % "0.5.1",
-      "org.scalatestplus" %% "play" % "1.4.0-M3" % "test"
+      malliinaGroup %% "play-base" % "2.5.0",
+      PlayImport.specs2 % Test
     )
   )
 

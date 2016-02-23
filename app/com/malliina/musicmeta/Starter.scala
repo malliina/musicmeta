@@ -1,10 +1,7 @@
-package com.mle.musicmeta
+package com.malliina.musicmeta
 
-import com.mle.play.PlayLifeCycle
+import com.malliina.play.PlayLifeCycle
 
-/**
- * @author Michael
- */
 object Starter extends PlayLifeCycle {
   override def appName: String = "musicmeta"
 }
