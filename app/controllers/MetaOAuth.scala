@@ -1,5 +1,6 @@
 package controllers
 
+import akka.stream.Materializer
 import com.malliina.play.controllers.OAuthSecured
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import play.api.libs.json.JsValue
@@ -10,8 +11,8 @@ object MetaOAuth {
   val MessageKey = "message"
 }
 
-class MetaOAuth extends OAuthSecured {
-  val streamer = new LogStreamer(req => authenticate(req).map(_.get))
+class MetaOAuth(val mat: Materializer) extends OAuthSecured {
+  val streamer = new LogStreamer(req => authenticate(req).map(_.get), mat)
 
   override def isAuthorized(email: String): Boolean = email == "malliina123@gmail.com"
 
@@ -23,7 +24,7 @@ class MetaOAuth extends OAuthSecured {
 
   override def ejectCall: Call = routes.MetaOAuth.eject()
 
-  def openSocket: WebSocket[JsValue, JsValue] = streamer.openSocket
+  def openSocket: WebSocket = streamer.openSocket
 
   def index = AuthAction(_ => Ok(views.html.index()))
 

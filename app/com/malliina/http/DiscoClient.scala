@@ -3,23 +3,27 @@ package com.malliina.http
 import java.io.Closeable
 import java.nio.file.{Files, Path}
 
-import com.malliina.concurrent.ExecutionContexts.cached
+import akka.stream.Materializer
+import com.malliina.http.DiscoClient.log
 import com.malliina.oauth.DiscoGsOAuthCredentials
 import com.malliina.play.streams.Streams
 import com.malliina.storage._
-import com.malliina.util.Log
-import com.ning.http.client.AsyncHttpClientConfig
 import org.apache.commons.codec.digest.DigestUtils
+import org.asynchttpclient.DefaultAsyncHttpClientConfig
+import play.api.Logger
 import play.api.http.HeaderNames
 import play.api.libs.json.Json
-import play.api.libs.ws.ning.NingWSClient
-import play.api.libs.ws.{WS, WSRequest, WSResponse}
+import play.api.libs.ws.ahc.AhcWSClient
+import play.api.libs.ws.{WSRequest, WSResponse}
 
 import scala.concurrent.Future
 
-class DiscoClient(credentials: DiscoGsOAuthCredentials, coverDir: Path) extends Log with Closeable {
+class DiscoClient(credentials: DiscoGsOAuthCredentials, coverDir: Path, mat: Materializer) extends Closeable {
+  implicit val m = mat
+  implicit val ec = mat.executionContext
+
   Files.createDirectories(coverDir)
-  implicit val client = new NingWSClient(new AsyncHttpClientConfig.Builder().build())
+  implicit val client = AhcWSClient()
   val consumerKey = credentials.consumerKey
   val consumerSecret = credentials.consumerSecret
   val iLoveDiscoGsFakeCoverSize = 15378
@@ -48,7 +52,9 @@ class DiscoClient(credentials: DiscoGsOAuthCredentials, coverDir: Path) extends 
     * @see http://www.playframework.com/documentation/2.3.x/ScalaWS
     */
   protected def downloadFile(url: String, file: Path): Future[StorageSize] = {
-    authenticated(url).get(headers => Streams.fileWriter(file)).flatMap(_.run).map(_.bytes)
+    authenticated(url).withMethod("GET").stream().flatMap { stream =>
+      stream.body.runWith(Streams.fileWriter2(file)).map(_.count.bytes)
+    }
   }
 
   protected def coverFile(artist: String, album: String): Path = {
@@ -96,7 +102,8 @@ class DiscoClient(credentials: DiscoGsOAuthCredentials, coverDir: Path) extends 
   private def authenticated(url: String): WSRequest = {
     log debug s"Preparing authenticated request to $url"
     //    WS.clientUrl(url) sign signer
-    WS.clientUrl(url).withHeaders(HeaderNames.AUTHORIZATION -> s"Discogs key=$consumerKey, secret=$consumerSecret")
+    client.url(url).withHeaders(
+      HeaderNames.AUTHORIZATION -> s"Discogs key=$consumerKey, secret=$consumerSecret")
   }
 
   private def albumIdUrl(artist: String, album: String): String = {
@@ -127,6 +134,7 @@ class DiscoClient(credentials: DiscoGsOAuthCredentials, coverDir: Path) extends 
 }
 
 object DiscoClient {
+  private val log = Logger(getClass)
   val RESULTS = "results"
   val ID = "id"
   val IMAGES = "images"

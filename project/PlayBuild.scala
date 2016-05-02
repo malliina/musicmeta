@@ -8,17 +8,19 @@ import sbt.Keys._
 import sbt._
 
 object PlayBuild extends Build {
-  lazy val p = PlayProject("musicmeta").settings(commonSettings: _*).enablePlugins(play.sbt.PlayScala)
+  lazy val p = PlayProject("musicmeta")
+    .settings(commonSettings: _*)
+    .enablePlugins(play.sbt.PlayScala)
 
   val malliinaGroup = "com.malliina"
   val commonSettings = linuxSettings ++ Seq(
-    version := "1.3.0",
+    version := "1.4.0",
     scalaVersion := "2.11.7",
     retrieveManaged := false,
     fork in Test := true,
     resolvers += Resolver.bintrayRepo("malliina", "maven"),
     libraryDependencies ++= Seq(
-      malliinaGroup %% "play-base" % "2.5.0",
+      malliinaGroup %% "play-base" % "2.8.0",
       PlayImport.specs2 % Test
     )
   )

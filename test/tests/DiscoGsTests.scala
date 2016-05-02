@@ -1,5 +1,7 @@
 package tests
 
+import akka.actor.ActorSystem
+import akka.stream.{ActorMaterializer, Materializer}
 import com.malliina.concurrent.ExecutionContexts.cached
 import com.malliina.concurrent.FutureOps
 import com.malliina.file.FileUtilities
@@ -13,9 +15,12 @@ import scala.concurrent.duration.DurationInt
 class DiscoGsTests extends Specification {
   val uri = "http://api.discogs.com/image/R-5245462-1388609959-3809.jpeg"
 
+  implicit val as = ActorSystem("test")
+  val mat: Materializer = ActorMaterializer()
+
   "Service" should {
     "download cover" in {
-      val client = new DiscoClient(DiscoGsOAuthReader.load, FileUtilities.tempDir)
+      val client = new DiscoClient(DiscoGsOAuthReader.load, FileUtilities.tempDir, mat)
       val result = client.downloadCover("Iron Maiden", "Powerslave")
         .map(p => s"Downloaded to $p")
         .recoverAll(t => s"Failure: $t")

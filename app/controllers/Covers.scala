@@ -4,6 +4,7 @@ import java.net.ConnectException
 import java.nio.file.Paths
 
 import akka.actor.ActorSystem
+import akka.stream.Materializer
 import com.malliina.concurrent.ExecutionContexts.cached
 import com.malliina.file.{FileUtilities, StorageFile}
 import com.malliina.http.{CoverNotFoundException, DiscoClient, ResponseException}
@@ -14,11 +15,13 @@ import play.api.mvc.{Action, Controller}
 
 import scala.concurrent.Future
 
-class Covers(actorSystem: ActorSystem, oauth: MetaOAuth) extends Controller with Log {
+class Covers(actorSystem: ActorSystem, oauth: MetaOAuth, mat: Materializer)
+  extends Controller
+    with Log {
   val syncAction = new SyncAction(actorSystem)
   val fallbackCoverDir = FileUtilities.tempDir / "covers"
   val coverDir = sys.props.get("cover.dir").fold(fallbackCoverDir)(path => Paths.get(path))
-  val covers = new DiscoClient(DiscoGsOAuthReader.load, coverDir)
+  val covers = new DiscoClient(DiscoGsOAuthReader.load, coverDir, mat)
 
   def ping = oauth.Logged(Action(Ok))
 

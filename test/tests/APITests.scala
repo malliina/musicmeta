@@ -1,6 +1,7 @@
 package tests
 
 import akka.actor.ActorSystem
+import akka.stream.ActorMaterializer
 import com.malliina.app.AppLoader
 import controllers.{Covers, MetaOAuth}
 import org.specs2.mutable.Specification
@@ -16,9 +17,10 @@ class WithApp extends WithApplicationLoader(new AppLoader)
 
 class APITests extends Specification with Results {
   implicit val timeout = 20.seconds
-  val actorSystem = ActorSystem("test")
-  val oauth = new MetaOAuth
-  val covers = new Covers(actorSystem, oauth)
+  implicit val actorSystem = ActorSystem("test")
+  implicit val mat = ActorMaterializer()
+  val oauth = new MetaOAuth(mat)
+  val covers = new Covers(actorSystem, oauth, mat)
 
   "App" should {
     "respond to ping" in {
