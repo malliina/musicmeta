@@ -19,7 +19,7 @@ object BuildBuild extends Build {
   lazy val root = Project("plugins", file("."))
 
   def sbtPlugins = Seq(
-    "com.typesafe.play" % "sbt-plugin" % "2.5.3",
+    "com.typesafe.play" % "sbt-plugin" % "2.5.4",
     malliinaGroup %% "sbt-packager" % "2.1.0",
     malliinaGroup %% "sbt-play" % "0.7.2"
   ) map addSbtPlugin

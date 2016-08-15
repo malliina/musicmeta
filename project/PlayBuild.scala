@@ -15,7 +15,7 @@ object PlayBuild extends Build {
   val malliinaGroup = "com.malliina"
   val commonSettings = linuxSettings ++ Seq(
     version := "1.4.0",
-    scalaVersion := "2.11.7",
+    scalaVersion := "2.11.8",
     retrieveManaged := false,
     fork in Test := true,
     resolvers += Resolver.bintrayRepo("malliina", "maven"),
