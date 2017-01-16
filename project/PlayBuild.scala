@@ -7,31 +7,36 @@ import play.sbt.PlayImport
 import sbt.Keys._
 import sbt._
 
-object PlayBuild extends Build {
-  lazy val p = PlayProject("musicmeta")
+object PlayBuild {
+  lazy val p = PlayProject.default("musicmeta")
     .settings(commonSettings: _*)
-    .enablePlugins(play.sbt.PlayScala)
 
   val malliinaGroup = "com.malliina"
   val commonSettings = linuxSettings ++ Seq(
-    version := "1.4.0",
+    version := "1.5.0",
     scalaVersion := "2.11.8",
-    retrieveManaged := false,
-    fork in Test := true,
     resolvers += Resolver.bintrayRepo("malliina", "maven"),
     libraryDependencies ++= Seq(
-      malliinaGroup %% "play-base" % "2.8.0",
+      malliinaGroup %% "play-base" % "3.3.3",
       PlayImport.specs2 % Test
     )
   )
 
-  def linuxSettings = LinuxPlugin.playSettings ++ Seq(
-    httpPort in Linux := Option("disabled"),
-    httpsPort in Linux := Option("8457"),
-    packager.Keys.maintainer := "Michael Skogberg <malliina123@gmail.com>",
-    javaOptions in Universal ++= Seq(
-      "-Dlogger.resource=logger.xml",
-      s"-Dcover.dir=${(appHome in Linux).value getOrElse s"/opt/${(name in Linux).value}"}/covers"
+  def linuxSettings = {
+    LinuxPlugin.playSettings ++ Seq(
+      httpPort in Linux := Option("disabled"),
+      httpsPort in Linux := Option("8460"),
+      packager.Keys.maintainer := "Michael Skogberg <malliina123@gmail.com>",
+      javaOptions in Universal ++= {
+        val linuxName = (name in Linux).value
+        Seq(
+          s"-Dgoogle.oauth=/etc/$linuxName/google-oauth.key",
+          "-Dlogger.resource=logger.xml",
+          s"-Dcover.dir=${(appHome in Linux).value getOrElse s"/opt/$linuxName"}/covers",
+          "-Dfile.encoding=UTF-8",
+          "-Dsun.jnu.encoding=UTF-8"
+        )
+      }
     )
-  )
+  }
 }

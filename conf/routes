@@ -1,7 +1,7 @@
 GET        /                    controllers.MetaOAuth.index
 GET        /logs                controllers.MetaOAuth.logs
-GET        /oauth               controllers.MetaOAuth.initiate
-GET        /oauthcb             controllers.MetaOAuth.redirResponse
+GET        /oauth               controllers.MetaOAuthControl.initiate
+GET        /oauthcb             controllers.MetaOAuthControl.redirResponse
 GET        /eject               controllers.MetaOAuth.eject
 GET        /logout              controllers.MetaOAuth.logout
 GET        /ping                controllers.Covers.ping

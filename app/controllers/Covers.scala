@@ -10,22 +10,27 @@ import com.malliina.file.{FileUtilities, StorageFile}
 import com.malliina.http.{CoverNotFoundException, DiscoClient, ResponseException}
 import com.malliina.oauth.DiscoGsOAuthReader
 import com.malliina.play.actions.Actions.SyncAction
-import com.malliina.util.Log
+import controllers.Covers.log
+import play.api.Logger
 import play.api.mvc.{Action, Controller}
 
 import scala.concurrent.Future
 
+object Covers {
+  private val log = Logger(getClass)
+}
+
 class Covers(actorSystem: ActorSystem, oauth: MetaOAuth, mat: Materializer)
-  extends Controller
-    with Log {
+  extends Controller {
+
   val syncAction = new SyncAction(actorSystem)
   val fallbackCoverDir = FileUtilities.tempDir / "covers"
   val coverDir = sys.props.get("cover.dir").fold(fallbackCoverDir)(path => Paths.get(path))
   val covers = new DiscoClient(DiscoGsOAuthReader.load, coverDir, mat)
 
-  def ping = oauth.Logged(Action(Ok))
+  def ping = oauth.logged(Action(Ok))
 
-  def cover = oauth.Logged(syncAction.async(request => {
+  def cover = oauth.logged(syncAction.async(request => {
     def message(msg: String) = s"From ${request.remoteAddress}: $msg"
     def query(key: String) = (request getQueryString key).filter(_.nonEmpty)
     (for {

@@ -1,6 +1,6 @@
 @import com.malliina.play.ws.WebSocketController
 
-@(feedback: Option[String] = None, sockets: WebSocketController)(implicit request: RequestHeader)
+@(feedback: Option[String] = None, sockets: WebSocketController, req: RequestHeader)
 
 @baseIndex("logs") {
     @bs.headerRow("Logs")
@@ -21,4 +21,4 @@
     }
 }
 <script src="@routes.Assets.at("js/rx.js")"></script>
-@wsopen(sockets.wsUrl)
+@wsopen(sockets.wsUrl(req))
