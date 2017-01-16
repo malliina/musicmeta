@@ -29,10 +29,14 @@ object PlayBuild {
       packager.Keys.maintainer := "Michael Skogberg <malliina123@gmail.com>",
       javaOptions in Universal ++= {
         val linuxName = (name in Linux).value
+        val metaHome = (appHome in Linux).value
         Seq(
+          s"-Dmusicmeta.home=$metaHome",
+          s"-Dpidfile.path=$metaHome/musicmeta.pid",
+          s"-Ddiscogs.oauth=/etc/$linuxName/discogs-oauth.key",
           s"-Dgoogle.oauth=/etc/$linuxName/google-oauth.key",
           "-Dlogger.resource=logger.xml",
-          s"-Dcover.dir=${(appHome in Linux).value getOrElse s"/opt/$linuxName"}/covers",
+          s"-Dcover.dir=$metaHome/covers",
           "-Dfile.encoding=UTF-8",
           "-Dsun.jnu.encoding=UTF-8"
         )
