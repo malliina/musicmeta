@@ -4,7 +4,7 @@ import akka.stream.Materializer
 import com.malliina.play.controllers.OAuthControl
 import play.api.mvc.{Call, RequestHeader}
 
-class MetaOAuthControl(val mat: Materializer, isProd: Boolean) extends OAuthControl(mat) {
+class MetaOAuthControl(val mat: Materializer, val isProd: Boolean) extends OAuthControl(mat) {
   // temp hack
   override def redirURL(request: RequestHeader): String =
     oAuthRedir.absoluteURL(secure = isProd)(request)

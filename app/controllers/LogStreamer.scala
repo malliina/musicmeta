@@ -10,7 +10,9 @@ import rx.lang.scala.Subscription
 
 import scala.concurrent.Future
 
-class LogStreamer(auth: RequestHeader => Future[AuthedRequest], val mat: Materializer)
+class LogStreamer(auth: RequestHeader => Future[AuthedRequest],
+                  val mat: Materializer,
+                  isProd: Boolean)
   extends LogStreaming(mat) {
   val appender = LogbackUtils.appender[BasicBoundedReplayRxAppender]("RX")
     .getOrElse(new BasicBoundedReplayRxAppender)
@@ -20,4 +22,7 @@ class LogStreamer(auth: RequestHeader => Future[AuthedRequest], val mat: Materia
   override def authenticateAsync(req: RequestHeader): Future[AuthedRequest] = auth(req)
 
   override def openSocketCall: Call = routes.MetaOAuth.openSocket()
+
+  override def wsUrl(request: RequestHeader): String =
+    openSocketCall.webSocketURL(secure = isProd)(request)
 }

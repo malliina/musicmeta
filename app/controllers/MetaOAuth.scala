@@ -10,7 +10,7 @@ object MetaOAuth {
 }
 
 class MetaOAuth(oauth: MetaOAuthControl) extends OAuthSecured(oauth, oauth.mat) {
-  val streamer = new LogStreamer(req => authenticate(req).map(_.get), mat)
+  val streamer = new LogStreamer(req => authenticate(req).map(_.get), mat, oauth.isProd)
 
   def openSocket: WebSocket = streamer.openSocket
 
