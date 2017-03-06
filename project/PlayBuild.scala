@@ -27,8 +27,8 @@ object PlayBuild {
 
   def linuxSettings = {
     LinuxPlugin.playSettings ++ Seq(
-      httpPort in Linux := Option("8460"),
-      httpsPort in Linux := Option("disabled"),
+      httpPort in Linux := Option("disabled"),
+      httpsPort in Linux := Option("8460"),
       packager.Keys.maintainer := "Michael Skogberg <malliina123@gmail.com>",
       javaOptions in Universal ++= {
         val linuxName = (name in Linux).value
