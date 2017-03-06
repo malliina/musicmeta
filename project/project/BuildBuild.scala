@@ -18,7 +18,7 @@ object BuildBuild {
   val malliinaGroup = "com.malliina"
 
   def sbtPlugins = Seq(
-    malliinaGroup %% "sbt-packager" % "2.1.0",
+    malliinaGroup %% "sbt-packager" % "2.2.0",
     malliinaGroup %% "sbt-play" % "0.9.1"
   ) map addSbtPlugin
 }
