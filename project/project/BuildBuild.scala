@@ -3,22 +3,25 @@ import sbt._
 
 object BuildBuild {
   // "build.sbt" goes here
-  lazy val settings = Seq(
+  lazy val settings = sbtPlugins ++ Seq(
     scalaVersion := "2.10.6",
     resolvers ++= Seq(
-      "Typesafe repository" at "http://repo.typesafe.com/typesafe/releases/",
-      "Typesafe ivy releases" at "http://repo.typesafe.com/typesafe/ivy-releases/",
-      "Sonatype releases" at "https://oss.sonatype.org/content/repositories/releases/",
-      Resolver.url("malliina bintray sbt", url("https://dl.bintray.com/malliina/sbt-plugins"))(Resolver.ivyStylePatterns)
+      ivyRepo("bintray-sbt-plugin-releases",
+        "http://dl.bintray.com/content/sbt/sbt-plugin-releases"),
+      ivyRepo("malliina bintray sbt",
+        "https://dl.bintray.com/malliina/sbt-plugins/"),
+      Resolver.bintrayRepo("malliina", "maven")
     ),
-    scalacOptions ++= Seq("-unchecked", "-deprecation"),
-    incOptions := incOptions.value.withNameHashing(true)
-  ) ++ sbtPlugins
+    scalacOptions ++= Seq("-unchecked", "-deprecation")
+  )
+
+  def ivyRepo(name: String, urlString: String) =
+    Resolver.url(name, url(urlString))(Resolver.ivyStylePatterns)
 
   val malliinaGroup = "com.malliina"
 
   def sbtPlugins = Seq(
     malliinaGroup %% "sbt-packager" % "2.2.0",
-    malliinaGroup %% "sbt-play" % "0.9.1"
+    malliinaGroup %% "sbt-play" % "0.9.3"
   ) map addSbtPlugin
 }

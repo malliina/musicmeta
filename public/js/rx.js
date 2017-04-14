@@ -16,7 +16,6 @@ var onmessage = function (payload) {
 };
 var onclose = function (payload) {
     setStatus("Closed.");
-//    alert('the connection has been closed')
 };
 var onerror = function (payload) {
     setStatus("Error.");
@@ -34,6 +33,22 @@ var prepend = function (e) {
 var setStatus = function (newStatus) {
     document.getElementById("status").innerHTML = newStatus;
 };
+
+var openSocket = function (wsUrl) {
+    var WS = window['MozWebSocket'] ? MozWebSocket : WebSocket;
+    webSocket = new WS(wsUrl);
+    webSocket.onopen = onconnect;
+    webSocket.onmessage = function (evt) {
+        onmessage(evt)
+    };
+    webSocket.onclose = onclose;
+    webSocket.onerror = onerror;
+};
+
 $(document).ready(function () {
-    tableContent = $("#logTableBody");
+    tableContent = $("#log-table-body");
+    // http://stackoverflow.com/a/6941653
+    var scheme = location.protocol == "https:" ? "wss:" : "ws:";
+    var full = scheme + '//' + location.hostname + (location.port ? ':' + location.port : '');
+    openSocket(full + "/ws?f=json");
 });

@@ -1,24 +1,30 @@
 package controllers
 
+import com.malliina.musicmeta.{MusicTags, UserFeedback}
 import com.malliina.play.controllers.OAuthSecured
 import play.api.mvc.Results.{Ok, Redirect}
 import play.api.mvc.{Action, WebSocket}
-import views.html
 
 object MetaOAuth {
   val MessageKey = "message"
 }
 
-class MetaOAuth(oauth: MetaOAuthControl) extends OAuthSecured(oauth, oauth.mat) {
+class MetaOAuth(oauth: MetaOAuthControl)
+  extends OAuthSecured(oauth, oauth.mat) {
   val streamer = new LogStreamer(req => authenticate(req).map(_.get), mat, oauth.isProd)
 
   def openSocket: WebSocket = streamer.openSocket
 
-  def index = authAction(_ => Ok(views.html.index()))
+  def index = authAction(_ => Ok(MusicTags.index))
 
-  def logs = authAction(req => Ok(views.html.logs(None, streamer, req)))
+  def logs = authAction(_ => Ok(MusicTags.logs(None)))
 
-  def eject = logged(Action(req => Ok(html.eject(req.flash))))
+  def eject = logged {
+    Action { req =>
+      val feedback = UserFeedback.flashed(req.flash, oauth.messageKey)
+      Ok(MusicTags.eject(feedback))
+    }
+  }
 
   def logout = authAction(req => {
     Redirect(routes.MetaOAuth.eject()).withNewSession
