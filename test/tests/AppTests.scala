@@ -4,7 +4,7 @@ import com.malliina.app.AppComponents
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 
-class AppTests extends AppSuite(new AppComponents(_, APITests.fakeCreds)) {
+class AppTests extends AppSuite(new AppComponents(_, APITests.fakeCreds, APITests.fakeGoogle)) {
   test("router.ping") {
     val result = getRequest("/ping")
     assert(status(result) === 200)

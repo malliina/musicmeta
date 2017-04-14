@@ -2,7 +2,7 @@ package tests
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
-import com.malliina.oauth.DiscoGsOAuthCredentials
+import com.malliina.oauth.{DiscoGsOAuthCredentials, GoogleOAuthCredentials}
 import com.malliina.play.ActorExecution
 import controllers.{Covers, MetaOAuth, MetaOAuthControl}
 import org.scalatest.FunSuite
@@ -16,12 +16,14 @@ import scala.concurrent.{Await, Future}
 
 object APITests {
   val fakeCreds = DiscoGsOAuthCredentials("key", "secret", "token", "secret")
+  val fakeGoogle = GoogleOAuthCredentials("client", "secret", "scope")
 }
+
 class APITests extends FunSuite {
   implicit val timeout = 20.seconds
   implicit val actorSystem = ActorSystem("test")
   implicit val mat = ActorMaterializer()
-  val oauthControl = new MetaOAuthControl(mat)
+  val oauthControl = new MetaOAuthControl(APITests.fakeGoogle, mat)
   val exec = ActorExecution(actorSystem, mat)
   val oauth = MetaOAuth.forOAuth(oauthControl, exec)
   val covers = new Covers(oauth, APITests.fakeCreds, exec)
