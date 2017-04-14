@@ -5,10 +5,6 @@ import com.malliina.play.controllers.OAuthSecured
 import play.api.mvc.Results.{Ok, Redirect}
 import play.api.mvc.{Action, WebSocket}
 
-object MetaOAuth {
-  val MessageKey = "message"
-}
-
 class MetaOAuth(oauth: MetaOAuthControl)
   extends OAuthSecured(oauth, oauth.mat) {
   val streamer = new LogStreamer(req => authenticate(req).map(_.get), mat, oauth.isProd)
@@ -26,8 +22,8 @@ class MetaOAuth(oauth: MetaOAuthControl)
     }
   }
 
-  def logout = authAction(req => {
+  def logout = authAction { _ =>
     Redirect(routes.MetaOAuth.eject()).withNewSession
       .flashing(oauth.messageKey -> oauth.logoutMessage)
-  })
+  }
 }
