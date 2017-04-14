@@ -10,18 +10,17 @@ import sbt.Keys._
 import sbt._
 
 object PlayBuild {
-  lazy val p = PlayProject.default("musicmeta")
-    .enablePlugins(JavaServerAppPackaging)
+  lazy val p = PlayProject.server("musicmeta")
     .settings(commonSettings: _*)
 
   val malliinaGroup = "com.malliina"
+  val utilPlayDep =  malliinaGroup %% "util-play" % "3.6.8"
   val commonSettings = linuxSettings ++ Seq(
-    version := "1.5.2",
+    version := "1.5.3",
     scalaVersion := "2.11.8",
-    resolvers += Resolver.bintrayRepo("malliina", "maven"),
     libraryDependencies ++= Seq(
-      malliinaGroup %% "play-base" % "3.3.3",
-      PlayImport.specs2 % Test
+      utilPlayDep,
+      utilPlayDep % Test classifier "tests"
     )
   )
 
@@ -37,12 +36,10 @@ object PlayBuild {
           s"-Ddiscogs.oauth=/etc/$linuxName/discogs-oauth.key",
           s"-Dgoogle.oauth=/etc/$linuxName/google-oauth.key",
           s"-Dcover.dir=$metaHome/covers",
-          "-Dlogger.resource=logger.xml",
           "-Dfile.encoding=UTF-8",
           "-Dsun.jnu.encoding=UTF-8"
         )
-      },
-      serverLoading in Debian := ServerLoader.Systemd
+      }
     )
   }
 }

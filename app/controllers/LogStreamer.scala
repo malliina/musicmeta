@@ -1,28 +1,38 @@
 package controllers
 
-import akka.stream.Materializer
-import com.malliina.logbackrx.{BasicBoundedReplayRxAppender, LogbackUtils}
-import com.malliina.maps.{ItemMap, StmItemMap}
-import com.malliina.play.controllers.LogStreaming
-import com.malliina.play.http.AuthedRequest
-import play.api.mvc.{Call, RequestHeader}
-import rx.lang.scala.Subscription
+import akka.actor.Props
+import com.malliina.logbackrx.{BasicBoundedReplayRxAppender, LogEvent, LogbackUtils}
+import com.malliina.play.ActorExecution
+import com.malliina.play.auth.{Authenticator, UserAuthenticator}
+import com.malliina.play.models.Username
+import com.malliina.play.ws.{ActorConfig, ObserverActor, Sockets}
+import play.api.libs.json.{JsValue, Json}
+import play.api.mvc.Call
+import rx.lang.scala.Observable
 
-import scala.concurrent.Future
+import scala.concurrent.duration.DurationInt
 
-class LogStreamer(auth: RequestHeader => Future[AuthedRequest],
-                  val mat: Materializer,
-                  isProd: Boolean)
-  extends LogStreaming(mat) {
-  val appender = LogbackUtils.appender[BasicBoundedReplayRxAppender]("RX")
-    .getOrElse(new BasicBoundedReplayRxAppender)
-  val subscriptions: ItemMap[Client, Subscription] =
-    StmItemMap.empty[Client, Subscription]
+object LogStreamer {
+  def sockets(events: Observable[JsValue],
+              auth: Authenticator[Username],
+              ctx: ActorExecution): Sockets[Username] = {
+    new Sockets(auth, ctx) {
+      override def props(conf: ActorConfig[Username]) =
+        Props(new ObserverActor(events, conf))
+    }
+  }
 
-  override def authenticateAsync(req: RequestHeader): Future[AuthedRequest] = auth(req)
+  def apply(ctx: ActorExecution): LogStreamer =
+    new LogStreamer(UserAuthenticator.session(), ctx)
+}
 
-  override def openSocketCall: Call = routes.MetaOAuth.openSocket()
+class LogStreamer(auth: Authenticator[Username],
+                  ctx: ActorExecution) {
+  lazy val appender = LogbackUtils.getAppender[BasicBoundedReplayRxAppender]("RX")
+  lazy val logEvents: Observable[LogEvent] = appender.logEvents
+  lazy val jsonEvents: Observable[JsValue] =
+    logEvents.tumblingBuffer(50.millis).filter(_.nonEmpty).map(Json.toJson(_))
+  lazy val sockets = LogStreamer.sockets(jsonEvents, UserAuthenticator.session(), ctx)
 
-  override def wsUrl(request: RequestHeader): String =
-    openSocketCall.webSocketURL(secure = isProd)(request)
+  def openSocketCall: Call = routes.MetaOAuth.openSocket()
 }

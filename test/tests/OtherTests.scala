@@ -2,18 +2,12 @@ package tests
 
 import java.nio.file.Paths
 
-import org.specs2.mutable.Specification
+import org.scalatest.FunSuite
 
-class OtherTests extends Specification {
-  "tests" should {
-    "run" in {
-      1 mustEqual 1
-    }
-
-    "read a path" in {
-      val p = Paths.get("é")
-      val f = p.toFile
-      p.toAbsolutePath.toString mustEqual f.getAbsolutePath
-    }
+class OtherTests extends FunSuite {
+  test("read a path") {
+    val p = Paths.get("é")
+    val f = p.toFile
+    assert(p.toAbsolutePath.toString === f.getAbsolutePath)
   }
 }

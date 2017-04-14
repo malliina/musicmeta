@@ -2,12 +2,10 @@ package controllers
 
 import akka.stream.Materializer
 import com.malliina.play.controllers.OAuthControl
-import play.api.mvc.{Call, RequestHeader}
+import play.api.mvc.Call
 
-class MetaOAuthControl(val mat: Materializer, val isProd: Boolean) extends OAuthControl(mat) {
-  // temp hack
-  override def redirURL(request: RequestHeader): String =
-    oAuthRedir.absoluteURL(secure = isProd)(request)
+class MetaOAuthControl(mat: Materializer)
+  extends OAuthControl(mat) {
 
   override def isAuthorized(email: String): Boolean = email == "malliina123@gmail.com"
 
