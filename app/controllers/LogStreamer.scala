@@ -1,7 +1,8 @@
 package controllers
 
 import akka.actor.Props
-import com.malliina.logbackrx.{BasicBoundedReplayRxAppender, LogEvent, LogbackUtils}
+import com.malliina.logbackrx.{BasicBoundedReplayRxAppender, LogbackUtils}
+import com.malliina.logstreams.client.LogEvents
 import com.malliina.play.ActorExecution
 import com.malliina.play.auth.{Authenticator, UserAuthenticator}
 import com.malliina.play.models.Username
@@ -28,10 +29,11 @@ object LogStreamer {
 
 class LogStreamer(auth: Authenticator[Username],
                   ctx: ActorExecution) {
-  lazy val appender = LogbackUtils.getAppender[BasicBoundedReplayRxAppender]("RX")
-  lazy val logEvents: Observable[LogEvent] = appender.logEvents
-  lazy val jsonEvents: Observable[JsValue] =
-    logEvents.tumblingBuffer(50.millis).filter(_.nonEmpty).map(Json.toJson(_))
+  lazy val jsonEvents = LogbackUtils.getAppender[BasicBoundedReplayRxAppender]("RX")
+    .logEvents
+    .tumblingBuffer(50.millis)
+    .filter(_.nonEmpty)
+    .map(es => Json.toJson(LogEvents(es)))
   lazy val sockets = LogStreamer.sockets(jsonEvents, UserAuthenticator.session(), ctx)
 
   def openSocketCall: Call = routes.MetaOAuth.openSocket()

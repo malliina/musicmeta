@@ -4,10 +4,13 @@ import com.malliina.musicmeta.{MusicTags, UserFeedback}
 import com.malliina.play.ActorExecution
 import com.malliina.play.controllers.{AuthBundle, BaseSecurity}
 import com.malliina.play.models.Username
+import play.api.Logger
 import play.api.mvc.Action
 import play.api.mvc.Results.{Ok, Redirect}
 
 object MetaOAuth {
+  private val log = Logger(getClass)
+
   def forOAuth(oauth: MetaOAuthControl, ctx: ActorExecution) = {
     val authBundle = AuthBundle.oauth(oauth.startOAuth, oauth.sessionUserKey)
     new MetaOAuth(oauth, authBundle, ctx)

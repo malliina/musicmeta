@@ -7,11 +7,12 @@ var onconnect = function (payload) {
     webSocket.send(JSON.stringify({cmd: "subscribe"}));
 };
 var onmessage = function (payload) {
-    var event = jQuery.parseJSON(payload.data);
-    if (event.event == "ping") {
+    console.log(payload.data);
+    var data = jQuery.parseJSON(payload.data);
+    if (data.event == "ping") {
 
     } else {
-        prepend(event);
+        prepend(data.events);
     }
 };
 var onclose = function (payload) {
@@ -21,14 +22,18 @@ var onerror = function (payload) {
     setStatus("Error.");
 };
 // case class LogEvent(timeStamp: Long, timeFormatted:String, message: String, loggerName: String, threadName: String, level: Level)
-var prepend = function (e) {
+var prepend = function (events) {
+    events.forEach(prependSingle);
+};
+var prependSingle = function (event) {
     var trc;
-    if (e.level == "ERROR") {
+    if (event.level == "ERROR") {
         trc = "danger";
     } else {
         trc = "";
     }
-    tableContent.prepend("<tr class=" + trc + "><td>" + e.timeFormatted + "</td><td>" + e.message + "</td><td>" + e.loggerName + "</td><td>" + e.level + "</td></tr>")
+    tableContent.prepend("<tr class=" + trc + "><td>" + event.timeFormatted + "</td><td>" + event.message + "</td><td>" + event.loggerName + "</td><td>" + event.level + "</td></tr>")
+
 };
 var setStatus = function (newStatus) {
     document.getElementById("status").innerHTML = newStatus;
