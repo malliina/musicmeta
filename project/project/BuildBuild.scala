@@ -18,10 +18,7 @@ object BuildBuild {
   def ivyRepo(name: String, urlString: String) =
     Resolver.url(name, url(urlString))(Resolver.ivyStylePatterns)
 
-  val malliinaGroup = "com.malliina"
-
   def sbtPlugins = Seq(
-    malliinaGroup %% "sbt-packager" % "2.2.0",
-    malliinaGroup %% "sbt-play" % "0.9.3"
+    "com.malliina" %% "sbt-play" % "0.9.4"
   ) map addSbtPlugin
 }
