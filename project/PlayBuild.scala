@@ -42,7 +42,7 @@ object PlayBuild {
     ciBuild := {
       val file = (packageBin in Debian).value
       val lintianExitValue = Process(Seq("lintian", "-c", "-v", file.getName), Some(file.getParentFile)).!
-      if (lintianExitValue != 0) {
+      if (lintianExitValue > 1) {
         sys.error(s"Invalid exit value for 'lintian': $lintianExitValue")
       }
       val destName = s"${name.value}.${file.ext}"
