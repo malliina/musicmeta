@@ -15,7 +15,7 @@ object PlayBuild {
   val malliinaGroup = "com.malliina"
   val utilPlayDep = malliinaGroup %% "util-play" % "3.6.8"
   val commonSettings = linuxSettings ++ Seq(
-    version := "1.5.5",
+    version := "1.5.6",
     scalaVersion := "2.11.8",
     libraryDependencies ++= Seq(
       malliinaGroup %% "logstreams-client" % "0.0.6",

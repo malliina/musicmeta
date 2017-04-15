@@ -7,7 +7,6 @@ var onconnect = function (payload) {
     webSocket.send(JSON.stringify({cmd: "subscribe"}));
 };
 var onmessage = function (payload) {
-    console.log(payload.data);
     var data = jQuery.parseJSON(payload.data);
     if (data.event == "ping") {
 
