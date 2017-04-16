@@ -19,6 +19,6 @@ object BuildBuild {
     Resolver.url(name, url(urlString))(Resolver.ivyStylePatterns)
 
   def sbtPlugins = Seq(
-    "com.malliina" %% "sbt-play" % "0.9.5"
+    "com.malliina" %% "sbt-play" % "0.9.7"
   ) map addSbtPlugin
 }
