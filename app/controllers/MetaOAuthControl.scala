@@ -3,10 +3,10 @@ package controllers
 import akka.stream.Materializer
 import com.malliina.oauth.GoogleOAuthCredentials
 import com.malliina.play.controllers.OAuthControl
-import play.api.mvc.Call
+import play.api.mvc.{ActionBuilder, AnyContent, Call, Request}
 
-class MetaOAuthControl(creds: GoogleOAuthCredentials, mat: Materializer)
-  extends OAuthControl(creds, mat) {
+class MetaOAuthControl(val actions: ActionBuilder[Request, AnyContent], creds: GoogleOAuthCredentials, mat: Materializer)
+  extends OAuthControl(actions, creds, mat) {
 
   override def isAuthorized(email: String): Boolean = email == "malliina123@gmail.com"
 

@@ -8,11 +8,10 @@ import com.malliina.file.{FileUtilities, StorageFile}
 import com.malliina.http.{CoverNotFoundException, DiscoClient, ResponseException}
 import com.malliina.oauth.DiscoGsOAuthCredentials
 import com.malliina.play.ActorExecution
-import com.malliina.play.actions.Actions.SyncAction
 import com.malliina.play.http.Proxies
 import controllers.Covers.log
 import play.api.Logger
-import play.api.mvc.{Action, Controller}
+import play.api.mvc._
 
 import scala.concurrent.Future
 
@@ -20,12 +19,10 @@ object Covers {
   private val log = Logger(getClass)
 }
 
-class Covers(oauth: MetaOAuth,
+class Covers(comps: ControllerComponents,
+             oauth: MetaOAuth,
              creds: DiscoGsOAuthCredentials,
-             ctx: ActorExecution)
-  extends Controller {
-
-  val syncAction = new SyncAction(ctx.actorSystem)
+             ctx: ActorExecution) extends AbstractController(comps) {
   val fallbackCoverDir = FileUtilities.tempDir / "covers"
   val coverDir = sys.props.get("cover.dir").fold(fallbackCoverDir)(path => Paths.get(path))
   val covers = new DiscoClient(creds, coverDir, ctx.materializer)
@@ -33,7 +30,7 @@ class Covers(oauth: MetaOAuth,
   def ping = oauth.logged(Action(Ok))
 
   def cover = oauth.logged {
-    syncAction.async { request =>
+    Action.async { request =>
       def message(msg: String) = s"From '${Proxies.realAddress(request)}': $msg"
 
       def query(key: String) = (request getQueryString key).filter(_.nonEmpty)
@@ -47,10 +44,10 @@ class Covers(oauth: MetaOAuth,
           log info message(s"Serving cover '$coverName' at '$path'.")
           Ok.sendFile(path.toFile)
         }).recover {
-          case cnfe: CoverNotFoundException =>
+          case _: CoverNotFoundException =>
             log info message(s"Unable to find cover '$coverName'.")
             NotFound
-          case nse: NoSuchElementException =>
+          case _: NoSuchElementException =>
             log info message(s"Unable to find cover '$coverName'.")
             NotFound
           case re: ResponseException =>

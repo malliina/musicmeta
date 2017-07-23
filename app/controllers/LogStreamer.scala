@@ -5,7 +5,7 @@ import com.malliina.logbackrx.{BasicBoundedReplayRxAppender, LogbackUtils}
 import com.malliina.logstreams.client.LogEvents
 import com.malliina.play.ActorExecution
 import com.malliina.play.auth.{Authenticator, UserAuthenticator}
-import com.malliina.play.models.Username
+import com.malliina.play.models.{AuthRequest, Username}
 import com.malliina.play.ws.{ActorConfig, ObserverActor, Sockets}
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.Call
@@ -24,10 +24,10 @@ object LogStreamer {
   }
 
   def apply(ctx: ActorExecution): LogStreamer =
-    new LogStreamer(UserAuthenticator.session(), ctx)
+    new LogStreamer(UserAuthenticator.session().transform((rh, user) => Right(new AuthRequest(user, rh)))(ctx.executionContext), ctx)
 }
 
-class LogStreamer(auth: Authenticator[Username],
+class LogStreamer(auth: Authenticator[AuthRequest],
                   ctx: ActorExecution) {
   lazy val jsonEvents = LogbackUtils.getAppender[BasicBoundedReplayRxAppender]("RX")
     .logEvents

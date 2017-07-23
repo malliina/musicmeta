@@ -23,10 +23,11 @@ class APITests extends FunSuite {
   implicit val timeout = 20.seconds
   implicit val actorSystem = ActorSystem("test")
   implicit val mat = ActorMaterializer()
-  val oauthControl = new MetaOAuthControl(APITests.fakeGoogle, mat)
+
+  val oauthControl = new MetaOAuthControl(stubControllerComponents().actionBuilder, APITests.fakeGoogle, mat)
   val exec = ActorExecution(actorSystem, mat)
   val oauth = MetaOAuth.forOAuth(oauthControl, exec)
-  val covers = new Covers(oauth, APITests.fakeCreds, exec)
+  val covers = new Covers(stubControllerComponents(), oauth, APITests.fakeCreds, exec)
 
   test("respond to ping") {
     verifyActionResponse(covers.ping, OK)

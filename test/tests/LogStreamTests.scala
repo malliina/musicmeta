@@ -8,7 +8,7 @@ import scala.concurrent.duration.DurationInt
 import scala.concurrent.{Await, Future}
 
 class LogStreamTests extends FunSuite {
-  test("conn") {
+  ignore("conn") {
     new URL("https://letsencrypt.org/").openConnection.connect()
   }
 

@@ -9,12 +9,11 @@ import com.malliina.oauth.DiscoGsOAuthCredentials
 import com.malliina.play.streams.Streams
 import com.malliina.storage._
 import org.apache.commons.codec.digest.DigestUtils
-import org.asynchttpclient.DefaultAsyncHttpClientConfig
 import play.api.Logger
 import play.api.http.HeaderNames
 import play.api.libs.json.Json
-import play.api.libs.ws.ahc.AhcWSClient
-import play.api.libs.ws.{WSRequest, WSResponse}
+import play.api.libs.ws.ahc.StandaloneAhcWSClient
+import play.api.libs.ws.{StandaloneWSRequest, StandaloneWSResponse}
 
 import scala.concurrent.Future
 
@@ -23,7 +22,7 @@ class DiscoClient(credentials: DiscoGsOAuthCredentials, coverDir: Path, mat: Mat
   implicit val ec = mat.executionContext
 
   Files.createDirectories(coverDir)
-  implicit val client = AhcWSClient()
+  implicit val client = StandaloneAhcWSClient()
   val consumerKey = credentials.consumerKey
   val consumerSecret = credentials.consumerSecret
   val iLoveDiscoGsFakeCoverSize = 15378
@@ -51,11 +50,10 @@ class DiscoClient(credentials: DiscoGsOAuthCredentials, coverDir: Path, mat: Mat
     * @return the size of the downloaded file, stored in `file`
     * @see http://www.playframework.com/documentation/2.3.x/ScalaWS
     */
-  protected def downloadFile(url: String, file: Path): Future[StorageSize] = {
+  protected def downloadFile(url: String, file: Path): Future[StorageSize] =
     authenticated(url).withMethod("GET").stream().flatMap { stream =>
-      stream.body.runWith(Streams.fileWriter2(file)).map(_.count.bytes)
+      stream.bodyAsSource.runWith(Streams.fileWriter(file)).map(_.count.bytes)
     }
-  }
 
   protected def coverFile(artist: String, album: String): Path = {
     // avoids platform-specific file system encoding nonsense
@@ -96,14 +94,13 @@ class DiscoClient(credentials: DiscoGsOAuthCredentials, coverDir: Path, mat: Mat
 
   private def downloadString(url: String): Future[String] = getResponse(url) map (_.body)
 
-  private def getResponse(url: String): Future[WSResponse] = authenticated(url).get()
+  private def getResponse(url: String): Future[StandaloneWSResponse] = authenticated(url).get()
     .flatMap(r => validate(r, url).fold(Future.successful(r))(Future.failed))
 
-  private def authenticated(url: String): WSRequest = {
+  private def authenticated(url: String): StandaloneWSRequest = {
     log debug s"Preparing authenticated request to $url"
     //    WS.clientUrl(url) sign signer
-    client.url(url).withHeaders(
-      HeaderNames.AUTHORIZATION -> s"Discogs key=$consumerKey, secret=$consumerSecret")
+    client.url(url).addHttpHeaders(HeaderNames.AUTHORIZATION -> s"Discogs key=$consumerKey, secret=$consumerSecret")
   }
 
   private def albumIdUrl(artist: String, album: String): String = {
@@ -114,7 +111,7 @@ class DiscoClient(credentials: DiscoGsOAuthCredentials, coverDir: Path, mat: Mat
 
   private def albumUrl(albumId: Long) = s"https://api.discogs.com/releases/$albumId"
 
-  private def validate(wsResponse: WSResponse, url: String): Option[Exception] = {
+  private def validate(wsResponse: StandaloneWSResponse, url: String): Option[Exception] = {
     val code = wsResponse.status
     code match {
       case c if (c >= 200 && c < 300) || c == 404 => None
