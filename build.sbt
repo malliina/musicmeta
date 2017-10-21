@@ -5,7 +5,7 @@ import com.typesafe.sbt.packager.Keys.maintainer
 lazy val p = PlayProject.server("musicmeta")
 
 val malliinaGroup = "com.malliina"
-val utilPlayDep = malliinaGroup %% "util-play" % "4.3.9"
+val utilPlayDep = malliinaGroup %% "util-play" % "4.3.10"
 
 version := "1.7.0"
 scalaVersion := "2.12.4"
