@@ -12,7 +12,7 @@ lazy val p = PlayProject.server("musicmeta").enablePlugins(SystemdPlugin)
 val malliinaGroup = "com.malliina"
 val utilPlayDep = malliinaGroup %% "util-play" % "4.3.10"
 
-version := "1.7.5"
+version := "1.7.6"
 scalaVersion := "2.12.4"
 crossScalaVersions := Seq("2.11.11", scalaVersion.value)
 scalacOptions := Seq("-unchecked", "-deprecation")
@@ -33,8 +33,6 @@ javaOptions in Universal ++= {
     s"-Dcover.dir=$metaHome/covers"
   )
 }
-
-com.malliina.sbt.unix.LinuxPlugin.playSettings
 
 buildInfoKeys := Seq[BuildInfoKey](name, version, scalaVersion, "gitHash" -> gitHash)
 buildInfoPackage := "com.malliina.musicmeta"
