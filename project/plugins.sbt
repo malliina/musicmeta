@@ -10,5 +10,7 @@ scalacOptions ++= Seq("-unchecked", "-deprecation")
 
 addSbtPlugin("com.malliina" %% "sbt-play" % "1.2.0")
 
+addSbtPlugin("com.malliina" %% "sbt-packager" % "2.4.1")
+
 def ivyRepo(name: String, urlString: String) =
   Resolver.url(name, url(urlString))(Resolver.ivyStylePatterns)
