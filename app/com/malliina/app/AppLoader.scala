@@ -22,7 +22,7 @@ class AppComponents(context: Context, creds: DiscoGsOAuthCredentials, google: Go
     with HttpFiltersComponents
     with AssetsComponents {
 
-  val csp = "default-src 'self' 'unsafe-inline' *.bootstrapcdn.com *.googleapis.com; connect-src *"
+  val csp = "default-src 'self' 'unsafe-inline' *.musicpimp.org *.bootstrapcdn.com *.googleapis.com; connect-src *"
   override lazy val securityHeadersConfig = SecurityHeadersConfig(contentSecurityPolicy = Option(csp))
   lazy val oauthControl = new MetaOAuthControl(controllerComponents.actionBuilder, google, materializer)
   lazy val exec = ActorExecution(actorSystem, materializer)

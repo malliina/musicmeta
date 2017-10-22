@@ -12,7 +12,7 @@ lazy val p = PlayProject.server("musicmeta")
 val malliinaGroup = "com.malliina"
 val utilPlayDep = malliinaGroup %% "util-play" % "4.3.10"
 
-version := "1.7.1"
+version := "1.7.2"
 scalaVersion := "2.12.4"
 crossScalaVersions := Seq("2.11.11", scalaVersion.value)
 scalacOptions := Seq("-unchecked", "-deprecation")
