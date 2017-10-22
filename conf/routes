@@ -1,4 +1,5 @@
 GET        /                    controllers.MetaOAuth.index
+GET        /health              controllers.MetaOAuth.health
 GET        /logs                controllers.MetaOAuth.logs
 GET        /oauth               controllers.MetaOAuthControl.initiate
 GET        /oauthcb             controllers.MetaOAuthControl.redirResponse
