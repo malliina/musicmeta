@@ -10,9 +10,9 @@ import scala.util.Try
 lazy val p = PlayProject.server("musicmeta").enablePlugins(SystemdPlugin)
 
 val malliinaGroup = "com.malliina"
-val utilPlayDep = malliinaGroup %% "util-play" % "4.3.10"
+val utilPlayDep = malliinaGroup %% "util-play" % "4.4.0"
 
-version := "1.7.6"
+version := "1.7.7"
 scalaVersion := "2.12.4"
 crossScalaVersions := Seq("2.11.11", scalaVersion.value)
 scalacOptions := Seq("-unchecked", "-deprecation")

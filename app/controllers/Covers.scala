@@ -5,12 +5,12 @@ import java.nio.file.Paths
 
 import com.malliina.concurrent.ExecutionContexts.cached
 import com.malliina.file.{FileUtilities, StorageFile}
-import com.malliina.http.{CoverNotFoundException, DiscoClient, ResponseException}
+import com.malliina.http._
 import com.malliina.oauth.DiscoGsOAuthCredentials
-import com.malliina.play.ActorExecution
 import com.malliina.play.http.Proxies
 import controllers.Covers.log
 import play.api.Logger
+import play.api.libs.json.Json
 import play.api.mvc._
 
 import scala.concurrent.Future
@@ -19,13 +19,12 @@ object Covers {
   private val log = Logger(getClass)
 }
 
-class Covers(comps: ControllerComponents,
-             oauth: MetaOAuth,
+class Covers(oauth: MetaOAuth,
              creds: DiscoGsOAuthCredentials,
-             ctx: ActorExecution) extends AbstractController(comps) {
+             comps: ControllerComponents) extends AbstractController(comps) {
   val fallbackCoverDir = FileUtilities.tempDir / "covers"
   val coverDir = sys.props.get("cover.dir").fold(fallbackCoverDir)(path => Paths.get(path))
-  val covers = new DiscoClient(creds, coverDir, ctx.materializer)
+  val covers = DiscoClient(creds, coverDir)
 
   def ping = oauth.logged(Action(Ok))
 
@@ -40,16 +39,18 @@ class Covers(comps: ControllerComponents,
         album <- query("album")
       } yield {
         val coverName = s"$artist - $album"
-        covers.cover(artist, album).map(path => {
+        covers.cover(artist, album).map { path =>
           log info message(s"Serving cover '$coverName' at '$path'.")
           Ok.sendFile(path.toFile)
-        }).recover {
+        }.recover {
           case _: CoverNotFoundException =>
-            log info message(s"Unable to find cover '$coverName'.")
-            NotFound
+            val userMessage = s"Unable to find cover '$coverName'."
+            log info message(userMessage)
+            notFound(userMessage)
           case _: NoSuchElementException =>
-            log info message(s"Unable to find cover '$coverName'.")
-            NotFound
+            val userMessage = s"Unable to find cover '$coverName'."
+            log info message(userMessage)
+            notFound(userMessage)
           case re: ResponseException =>
             log.error(s"Invalid response received.", re)
             BadGateway
@@ -64,4 +65,6 @@ class Covers(comps: ControllerComponents,
       result getOrElse Future.successful(BadRequest)
     }
   }
+
+  def notFound(message: String) = NotFound(Json.toJson(Errors(Seq(SingleError(message)))))
 }

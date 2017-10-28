@@ -26,9 +26,9 @@ class AppComponents(context: Context, creds: DiscoGsOAuthCredentials, google: Go
   val csp = "default-src 'self' 'unsafe-inline' *.musicpimp.org *.bootstrapcdn.com *.googleapis.com; connect-src *"
   override lazy val securityHeadersConfig = SecurityHeadersConfig(contentSecurityPolicy = Option(csp))
   override def httpFilters: Seq[EssentialFilter] = Seq(csrfFilter, securityHeadersFilter)
-  lazy val oauthControl = new MetaOAuthControl(controllerComponents.actionBuilder, google, materializer)
+  lazy val oauthControl = new MetaOAuthControl(controllerComponents.actionBuilder, google)
   lazy val exec = ActorExecution(actorSystem, materializer)
   lazy val oauth = MetaOAuth.forOAuth(oauthControl, exec)
-  lazy val covers = new Covers(controllerComponents, oauth, creds, exec)
+  lazy val covers = new Covers(oauth, creds, controllerComponents)
   override val router: Router = new Routes(httpErrorHandler, oauth, oauthControl, covers, assets)
 }
