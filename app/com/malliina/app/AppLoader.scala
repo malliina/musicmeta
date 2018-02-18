@@ -3,7 +3,7 @@ package com.malliina.app
 import com.malliina.oauth.{DiscoGsOAuthCredentials, DiscoGsOAuthReader, GoogleOAuthCredentials, GoogleOAuthReader}
 import com.malliina.play.ActorExecution
 import com.malliina.play.app.DefaultApp
-import controllers.{AssetsComponents, Covers, MetaOAuth, MetaOAuthControl}
+import controllers._
 import play.api.ApplicationLoader.Context
 import play.api.BuiltInComponentsFromContext
 import play.api.mvc.EssentialFilter
@@ -23,12 +23,24 @@ class AppComponents(context: Context, creds: DiscoGsOAuthCredentials, google: Go
     with HttpFiltersComponents
     with AssetsComponents {
 
-  val csp = "default-src 'self' 'unsafe-inline' *.musicpimp.org *.bootstrapcdn.com *.googleapis.com; connect-src *"
+  val allowedCsp = Seq(
+    "*.bootstrapcdn.com",
+    "*.googleapis.com",
+    "code.jquery.com",
+    "use.fontawesome.com",
+    "cdnjs.cloudflare.com"
+  )
+  val allowedEntry = allowedCsp.mkString(" ")
+
+  val csp = s"default-src 'self' 'unsafe-inline' *.musicpimp.org $allowedEntry; connect-src *; img-src 'self' data:;"
   override lazy val securityHeadersConfig = SecurityHeadersConfig(contentSecurityPolicy = Option(csp))
+
   override def httpFilters: Seq[EssentialFilter] = Seq(csrfFilter, securityHeadersFilter)
+
   lazy val oauthControl = new MetaOAuthControl(controllerComponents.actionBuilder, google)
   lazy val exec = ActorExecution(actorSystem, materializer)
   lazy val oauth = MetaOAuth.forOAuth(oauthControl, exec)
   lazy val covers = new Covers(oauth, creds, controllerComponents)
-  override val router: Router = new Routes(httpErrorHandler, oauth, oauthControl, covers, assets)
+  lazy val metaAssets = new MetaAssets(assets)
+  override val router: Router = new Routes(httpErrorHandler, oauth, oauthControl, covers, metaAssets)
 }

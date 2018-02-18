@@ -1,6 +1,6 @@
 package controllers
 
-import com.malliina.musicmeta.{BuildMeta, MusicTags, UserFeedback}
+import com.malliina.musicmeta.{BuildMeta, MetaHtml, UserFeedback}
 import com.malliina.play.ActorExecution
 import com.malliina.play.controllers.{AuthBundle, BaseSecurity}
 import com.malliina.play.models.AuthRequest
@@ -21,18 +21,18 @@ class MetaOAuth(val oauth: MetaOAuthControl,
 
   val streamer = new LogStreamer(auth.authenticator, ctx)
 
-  def index = authAction(_ => Ok(MusicTags.index))
+  def index = authAction(_ => Ok(MetaHtml.index))
 
   def health = oauth.actions(Ok(Json.toJson(BuildMeta.default)))
 
-  def logs = authAction(_ => Ok(MusicTags.logs(None)))
+  def logs = authAction(_ => Ok(MetaHtml.logs(None)))
 
   def openSocket = streamer.sockets.newSocket
 
   def eject = logged {
     oauth.actions { req =>
       val feedback = UserFeedback.flashed(req.flash, oauth.messageKey)
-      Ok(MusicTags.eject(feedback))
+      Ok(MetaHtml.eject(feedback))
     }
   }
 

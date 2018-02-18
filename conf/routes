@@ -8,4 +8,4 @@ GET        /logout              controllers.MetaOAuth.logout
 GET        /ping                controllers.Covers.ping
 GET        /covers              controllers.Covers.cover
 GET        /ws                  controllers.MetaOAuth.openSocket
-GET        /assets/*file        controllers.Assets.at(path = "/public", file)
+GET        /assets/*file        controllers.MetaAssets.versioned(path = "/public", file: Asset)
