@@ -12,7 +12,7 @@ lazy val p = PlayProject.server("musicmeta").enablePlugins(SystemdPlugin)
 val malliinaGroup = "com.malliina"
 val utilPlayDep = malliinaGroup %% "util-play" % "4.6.2"
 
-version := "1.9.0"
+version := "1.9.1"
 scalaVersion := "2.12.4"
 crossScalaVersions := Seq("2.11.11", scalaVersion.value)
 scalacOptions := Seq("-unchecked", "-deprecation")
@@ -37,6 +37,8 @@ pipelineStages := Seq(digest, gzip)
 
 buildInfoKeys := Seq[BuildInfoKey](name, version, scalaVersion, "gitHash" -> gitHash)
 buildInfoPackage := "com.malliina.musicmeta"
+
+linuxPackageSymlinks := linuxPackageSymlinks.value.filterNot(_.link == "/usr/bin/starter")
 
 def gitHash: String =
   Try(Process("git rev-parse --short HEAD").lineStream.head).toOption.getOrElse("unknown")
