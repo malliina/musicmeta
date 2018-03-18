@@ -39,7 +39,7 @@ class AppComponents(context: Context, creds: DiscoGsOAuthCredentials, google: Go
 
   lazy val oauthControl = new MetaOAuthControl(controllerComponents.actionBuilder, google)
   lazy val exec = ActorExecution(actorSystem, materializer)
-  lazy val oauth = MetaOAuth.forOAuth(oauthControl, exec)
+  lazy val oauth = MetaOAuth("username", defaultActionBuilder, exec)
   lazy val covers = new Covers(oauth, creds, controllerComponents)
   lazy val metaAssets = new MetaAssets(assets)
   override val router: Router = new Routes(httpErrorHandler, oauth, oauthControl, covers, metaAssets)

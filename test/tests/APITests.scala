@@ -26,7 +26,7 @@ class APITests extends FunSuite {
 
   val oauthControl = new MetaOAuthControl(stubControllerComponents().actionBuilder, APITests.fakeGoogle)
   val exec = ActorExecution(actorSystem, mat)
-  val oauth = MetaOAuth.forOAuth(oauthControl, exec)
+  val oauth = MetaOAuth("username", stubControllerComponents().actionBuilder, exec)
   val covers = new Covers(oauth, APITests.fakeCreds, stubControllerComponents())
 
   test("respond to ping") {

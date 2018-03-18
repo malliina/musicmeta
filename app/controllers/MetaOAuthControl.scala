@@ -1,20 +1,30 @@
 package controllers
 
+import com.malliina.http.OkClient
 import com.malliina.oauth.GoogleOAuthCredentials
-import com.malliina.play.controllers.OAuthControl
+import com.malliina.play.auth.{AuthConf, AuthError, AuthHandler, CodeValidationConf, StandardCodeValidator}
 import com.malliina.play.models.Email
-import play.api.mvc.{ActionBuilder, AnyContent, Call, Request}
+import play.api.libs.json.Json
+import play.api.mvc.Results.{Redirect, Unauthorized}
+import play.api.mvc._
 
-class MetaOAuthControl(actions: ActionBuilder[Request, AnyContent], creds: GoogleOAuthCredentials)
-  extends OAuthControl(actions, creds) {
+class MetaOAuthControl(val actions: ActionBuilder[Request, AnyContent], creds: GoogleOAuthCredentials) {
+  val http = OkClient.default
+  val handler: AuthHandler = new AuthHandler {
+    override def onAuthenticated(email: Email, req: RequestHeader): Result =
+      if (email == Email("malliina123@gmail.com"))
+        Redirect(routes.MetaOAuth.logs()).withSession("username" -> email.email)
+      else
+        ejectWith(s"Not authorized: '$email'.")
 
-  override def isAuthorized(email: Email): Boolean = email == Email("malliina123@gmail.com")
+    override def onUnauthorized(error: AuthError, req: RequestHeader): Result =
+      Unauthorized(Json.obj("message" -> "Authentication failed."))
 
-  override def startOAuth: Call = routes.MetaOAuthControl.initiate()
+    def ejectWith(message: String) = Redirect(routes.MetaOAuth.eject()).flashing("message" -> message)
+  }
+  val validator = StandardCodeValidator(CodeValidationConf.google(routes.MetaOAuthControl.googleCallback(), handler, AuthConf(creds.clientId, creds.clientSecret), http))
 
-  override def oAuthRedir: Call = routes.MetaOAuthControl.redirResponse()
+  def googleStart = actions.async { req => validator.start(req) }
 
-  override def onOAuthSuccess: Call = routes.MetaOAuth.logs()
-
-  override def ejectCall: Call = routes.MetaOAuth.eject()
+  def googleCallback = actions.async { req => validator.validateCallback(req) }
 }
