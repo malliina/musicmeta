@@ -7,19 +7,23 @@ import scala.sys.process.Process
 
 import scala.util.Try
 
-lazy val p = PlayProject.server("musicmeta").enablePlugins(SystemdPlugin)
+lazy val p = PlayProject.server("musicmeta")
+  .enablePlugins(SystemdPlugin)
 
 val malliinaGroup = "com.malliina"
-val utilPlayDep = malliinaGroup %% "util-play" % "4.8.0"
+val utilPlayDep = malliinaGroup %% "util-play" % "4.11.0"
 
-version := "1.9.1"
-scalaVersion := "2.12.4"
-crossScalaVersions := Seq("2.11.11", scalaVersion.value)
+version := "1.10.0"
+scalaVersion := "2.12.5"
 scalacOptions := Seq("-unchecked", "-deprecation")
 libraryDependencies ++= Seq(
   malliinaGroup %% "logstreams-client" % "0.0.9",
   utilPlayDep,
   utilPlayDep % Test classifier "tests"
+)
+dependencyOverrides ++= Seq(
+  "com.typesafe.akka" %% "akka-stream" % "2.5.8",
+  "com.typesafe.akka" %% "akka-actor" % "2.5.8"
 )
 httpPort in Linux := Option("disabled")
 httpsPort in Linux := Option("8460")

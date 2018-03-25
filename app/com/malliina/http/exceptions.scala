@@ -1,6 +1,6 @@
 package com.malliina.http
 
-class ResponseException(val response: WebResponse, val url: String)
+class ResponseException(val response: HttpResponse, val url: FullUrl)
   extends MusicException(s"Request to $url failed. Invalid response code ${response.code}. Body ${response.asString}.") {
   def code = response.code
 

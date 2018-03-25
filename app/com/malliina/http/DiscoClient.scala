@@ -1,27 +1,29 @@
 package com.malliina.http
 
-import java.io.{BufferedOutputStream, Closeable}
+import java.io.Closeable
 import java.nio.file.{Files, Path}
 
 import com.malliina.concurrent.ExecutionContexts
-import com.malliina.http.DiscoClient.log
+import com.malliina.http.DiscoClient.{keys, log}
 import com.malliina.oauth.DiscoGsOAuthCredentials
 import com.malliina.storage._
-import com.malliina.util.Util
 import org.apache.commons.codec.digest.DigestUtils
-import org.apache.http.client.methods.HttpGet
 import play.api.Logger
-import play.api.http.HeaderNames
-import play.api.libs.json.Json
+import play.api.http.HeaderNames.AUTHORIZATION
+import play.api.libs.json.{JsValue, Json}
 
 import scala.concurrent.{ExecutionContext, Future}
 
 object DiscoClient {
   private val log = Logger(getClass)
-  val RESULTS = "results"
-  val ID = "id"
-  val IMAGES = "images"
-  val URI = "uri"
+
+  object keys {
+    val CoverImage = "cover_image"
+    val Id = "id"
+    val Images = "images"
+    val Results = "results"
+    val Uri = "uri"
+  }
 
   def apply(creds: DiscoGsOAuthCredentials, coverDir: Path): DiscoClient =
     new DiscoClient(creds, coverDir)(ExecutionContexts.cached)
@@ -29,7 +31,7 @@ object DiscoClient {
 
 class DiscoClient(credentials: DiscoGsOAuthCredentials, coverDir: Path)(implicit ec: ExecutionContext) extends Closeable {
   Files.createDirectories(coverDir)
-  val httpClient = new AsyncHttp()
+  val httpClient = OkClient.default
   val consumerKey = credentials.consumerKey
   val consumerSecret = credentials.consumerSecret
   val iLoveDiscoGsFakeCoverSize = 15378
@@ -57,16 +59,13 @@ class DiscoClient(credentials: DiscoGsOAuthCredentials, coverDir: Path)(implicit
     * @return the size of the downloaded file, stored in `file`
     * @see http://www.playframework.com/documentation/2.6.x/ScalaWS
     */
-  protected def downloadFile(url: String, file: Path): Future[StorageSize] = {
-    authenticated(url).map { r =>
-      Util.using(new BufferedOutputStream(Files.newOutputStream(file))) { outStream =>
-        r.inner.getEntity.writeTo(outStream)
-      }
-      Files.size(file).bytes
+  protected def downloadFile(url: FullUrl, file: Path): Future[StorageSize] = {
+    httpClient.download(url, file, Map(AUTHORIZATION -> authValue)).flatMap { either =>
+      either.fold(
+        err => Future.failed(new ResponseException(err.response, url)),
+        s => Future.successful(s)
+      )
     }
-    //    authenticated(url).withMethod("GET").stream().flatMap { stream =>
-    //      stream.bodyAsSource.runWith(Streams.fileWriter(file)).map(_.count.bytes)
-    //    }
   }
 
   protected def coverFile(artist: String, album: String): Path = {
@@ -85,50 +84,39 @@ class DiscoClient(credentials: DiscoGsOAuthCredentials, coverDir: Path)(implicit
     *
     * At least the last step, which downloads the cover, requires OAuth authentication.
     *
-    * @param artist    the artist
-    * @param album     the album
-    * @param urlToFile the file to download the cover to, given its remote URL
+    * @param artist  the artist
+    * @param album   the album
+    * @param fileFor the file to download the cover to, given its remote URL
     * @return the downloaded album cover along with the number of bytes downloaded
     */
-  protected def downloadCover(artist: String, album: String, urlToFile: String => Path): Future[Path] =
+  protected def downloadCover(artist: String, album: String, fileFor: FullUrl => Path): Future[Path] =
     for {
-      id <- getAlbumIdContent(albumIdUrl(artist, album))
-      url <- getCoverUrl(id)
-      file = urlToFile(url)
-      bytes <- downloadFile(url, file)
+      url <- albumCoverForSearch(albumIdUrl(artist, album))
+      file = fileFor(url)
+      _ <- downloadFile(url, file)
     } yield file
 
-  private def getAlbumIdContent(url: String): Future[Long] =
-    downloadString(url).map(content => albumId(content)
-      .getOrElse(throw new CoverNotFoundException(s"Unable to find album id from response: $content")))
+  private def albumCoverForSearch(url: FullUrl): Future[FullUrl] =
+    getResponse(url).map { r =>
+      coverImageForResult(Json.parse(r.asString))
+        .getOrElse(throw new CoverNotFoundException(s"Unable to find cover image from response: '${r.asString}'."))
+    }
 
-  private def getCoverUrl(id: Long): Future[String] =
-    downloadString(albumUrl(id)).map(content => coverUrl(content)
-      .getOrElse(throw new CoverNotFoundException(s"Unable to find cover art URL from response: $content")))
-
-  private def downloadString(url: String): Future[String] = getResponse(url).map(_.asString)
-
-  private def getResponse(url: String): Future[WebResponse] = authenticated(url)
+  private def getResponse(url: FullUrl): Future[HttpResponse] = authenticated(url)
     .flatMap(r => validate(r, url).fold(Future.successful(r))(Future.failed))
 
-  private def authenticated(url: String) = {
-    log debug s"Preparing authenticated request to $url"
-    val builder = new HttpGet(url)
-    builder.addHeader(HeaderNames.AUTHORIZATION, s"Discogs key=$consumerKey, secret=$consumerSecret")
-    httpClient.execute(builder)
-    //    WS.clientUrl(url) sign signer
-    //    client.url(url).addHttpHeaders(HeaderNames.AUTHORIZATION -> s"Discogs key=$consumerKey, secret=$consumerSecret")
+  private def authenticated(url: FullUrl) = {
+    log debug s"Preparing authenticated request to '$url'..."
+    httpClient.get(url, Map(AUTHORIZATION -> authValue))
   }
 
-  private def albumIdUrl(artist: String, album: String): String = {
+  private def albumIdUrl(artist: String, album: String): FullUrl = {
     val artistEnc = WebUtils.encodeURIComponent(artist)
     val albumEnc = WebUtils.encodeURIComponent(album)
-    s"https://api.discogs.com/database/search?artist=$artistEnc&release_title=$albumEnc"
+    FullUrl.https("api.discogs.com", s"/database/search?artist=$artistEnc&release_title=$albumEnc")
   }
 
-  private def albumUrl(albumId: Long) = s"https://api.discogs.com/releases/$albumId"
-
-  private def validate(wsResponse: WebResponse, url: String): Option[Exception] = {
+  private def validate(wsResponse: HttpResponse, url: FullUrl): Option[Exception] = {
     val code = wsResponse.code
     code match {
       case c if (c >= 200 && c < 300) || c == 404 => None
@@ -136,13 +124,11 @@ class DiscoClient(credentials: DiscoGsOAuthCredentials, coverDir: Path)(implicit
     }
   }
 
-  import DiscoClient._
+  private def coverImageForResult(json: JsValue): Option[FullUrl] = {
+    (json \ keys.Results \\ keys.CoverImage).headOption.flatMap(_.asOpt[FullUrl])
+  }
 
-  private def albumId(responseContent: String): Option[Long] =
-    (Json.parse(responseContent) \ RESULTS \\ ID).headOption.flatMap(_.asOpt[Long])
+  private def authValue = s"Discogs key=$consumerKey, secret=$consumerSecret"
 
-  private def coverUrl(responseContent: String): Option[String] =
-    (Json.parse(responseContent) \ IMAGES \\ URI).headOption.flatMap(_.asOpt[String])
-
-  def close() = httpClient.close()
+  def close(): Unit = httpClient.close()
 }

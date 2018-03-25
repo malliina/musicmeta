@@ -1,4 +1,4 @@
-package com.malliina.app
+package com.malliina.musicmeta
 
 import com.malliina.oauth.{DiscoGsOAuthCredentials, DiscoGsOAuthReader, GoogleOAuthCredentials, GoogleOAuthReader}
 import com.malliina.play.ActorExecution
