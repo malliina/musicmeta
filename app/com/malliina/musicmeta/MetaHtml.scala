@@ -7,13 +7,13 @@ import controllers.routes.MetaAssets.versioned
 import play.api.Mode
 import play.api.Mode.Prod
 import play.api.mvc.Call
-import scalatags.Text.{GenericAttr, TypedTag}
+import scalatags.Text.GenericAttr
 import scalatags.Text.all._
 
 object MetaHtml {
   def apply(mode: Mode) = {
-    val jsName = if (mode == Prod) "frontend-opt.js" else "frontend-fastopt.js"
-    new MetaHtml(jsName)
+    val suffix = if (mode == Prod) "opt" else "fastopt"
+    new MetaHtml(s"frontend-$suffix.js")
   }
 }
 
@@ -28,11 +28,19 @@ class MetaHtml(jsName: String) extends Bootstrap(Tags) {
     headerRow("Logs"),
     fullRow(
       feedback.fold(empty)(feedbackDiv),
-      p(id := "status", `class` := Lead)("Initializing...")
+      span(id := "status", `class` := Lead)("Initializing..."),
+      divClass(s"${btn.group} btn-group-toggle compact-group float-right", role := "group", data("toggle") := "buttons")(
+        label(`class` := s"${btn.info} ${btn.sm}", id := "label-verbose")(
+          input(`type` := "radio", name := "options", id := "option-verbose", autocomplete := "off")(" Verbose"),
+        ),
+        label(`class` := s"${btn.info} ${btn.sm} active", id := "label-compact")(
+          input(`type` := "radio", name := "options", id := "option-compact", autocomplete := "off")(" Compact"),
+        ),
+      ),
     ),
     fullRow(
       table(`class` := tables.defaultClass)(
-        thead(tr(Seq("Time", "Message", "Logger", "Level").map(h => th(h)))),
+        thead(tr(th("Time"), th("Message"), th(`class` := "verbose off")("Logger"), th("Level"))),
         tbody(id := "log-table-body")
       )
     ),

@@ -3,7 +3,7 @@ package com.malliina.musicmeta.js
 import com.malliina.http.FullUrl
 import org.scalajs.dom
 import org.scalajs.dom.html.TableSection
-import org.scalajs.dom.raw.{ErrorEvent, Event, MessageEvent}
+import org.scalajs.dom.raw._
 import org.scalajs.dom.{CloseEvent, WebSocket, document}
 import play.api.libs.json.{JsError, JsValue, Json}
 import scalatags.JsDom.all._
@@ -36,8 +36,26 @@ object LogEvents {
 }
 
 class MetaSocket {
-  val tableContent = document.getElementById("log-table-body").asInstanceOf[TableSection]
+  val OptionVerboseId = "option-verbose"
+  val OptionCompactId = "option-compact"
+  val tableContent = elem[TableSection]("log-table-body")
   val socket = openSocket("/ws?f=json")
+
+  var isVerbose: Boolean = false
+
+  installClick("label-verbose")(_ => updateVerbose(true))
+  installClick("label-compact")(_ => updateVerbose(false))
+
+  def updateVerbose(newVerbose: Boolean) = {
+    isVerbose = newVerbose
+    document.getElementsByClassName("verbose").foreach { e =>
+      val classes = e.asInstanceOf[HTMLElement].classList
+      if (newVerbose) classes.remove("off") else classes.add("off")
+    }
+  }
+
+  def installClick(on: String)(onClick: Event => Unit) =
+    elem[HTMLElement](on).addEventListener("click", onClick)
 
   def onMessage(msg: MessageEvent): Unit = {
     Try(Json.parse(msg.data.toString)).map { json =>
@@ -67,7 +85,8 @@ class MetaSocket {
 
   def row(event: LogEvent) = {
     val opening = if (event.isError) tr(`class` := "danger") else tr
-    opening(td(event.timeFormatted), td(event.message), td(event.loggerName), td(event.level))
+    val verboseClass = names("verbose", if (isVerbose) "" else "off")
+    opening(td(event.timeFormatted), td(event.message), td(`class` := verboseClass)(event.loggerName), td(event.level))
   }
 
   def onConnected(e: Event): Unit = updateStatus("Connected.")
@@ -95,4 +114,8 @@ class MetaSocket {
     val wsProto = if (location.protocol == "http:") "ws" else "wss"
     FullUrl(wsProto, location.host, "")
   }
+
+  def elem[T](id: String) = document.getElementById(id).asInstanceOf[T]
+
+  def names(ns: String*): String = ns.map(_.trim).filter(_.nonEmpty).mkString(" ")
 }
