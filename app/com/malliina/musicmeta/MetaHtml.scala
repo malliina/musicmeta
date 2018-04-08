@@ -4,39 +4,39 @@ import com.malliina.html.{Bootstrap, Tags}
 import com.malliina.play.tags.TagPage
 import controllers.routes
 import controllers.routes.MetaAssets.versioned
+import play.api.Mode
+import play.api.Mode.Prod
 import play.api.mvc.Call
-
 import scalatags.Text.{GenericAttr, TypedTag}
 import scalatags.Text.all._
 
-object MetaHtml extends MetaHtml
+object MetaHtml {
+  def apply(mode: Mode) = {
+    val jsName = if (mode == Prod) "frontend-opt.js" else "frontend-fastopt.js"
+    new MetaHtml(jsName)
+  }
+}
 
-class MetaHtml extends Bootstrap(Tags) {
+class MetaHtml(jsName: String) extends Bootstrap(Tags) {
+
   import tags._
 
   implicit val callAttr = new GenericAttr[Call]
   val empty: Modifier = ()
 
-  def index = baseIndex("home")(
-    headerRow("Home"),
-    fullRow(
-      leadPara("Hello")
-    )
-  )
-
-  def logs(feedback: Option[UserFeedback]) = baseIndex("logs")(
+  def logs(feedback: Option[UserFeedback]) = baseIndex("logs", wide = true)(
     headerRow("Logs"),
     fullRow(
       feedback.fold(empty)(feedbackDiv),
       p(id := "status", `class` := Lead)("Initializing...")
     ),
     fullRow(
-      table(`class` := tables.stripedHoverResponsive)(
+      table(`class` := tables.defaultClass)(
         thead(tr(Seq("Time", "Message", "Logger", "Level").map(h => th(h)))),
         tbody(id := "log-table-body")
       )
     ),
-    jsScript(versioned("js/rx.js"))
+    jsScript(versioned("frontend-fastopt.js"))
   )
 
   def eject(feedback: Option[UserFeedback]) =
@@ -49,7 +49,7 @@ class MetaHtml extends Bootstrap(Tags) {
       )
     )
 
-  def baseIndex(tabName: String)(content: Modifier*) = {
+  def baseIndex(tabName: String, wide: Boolean)(content: Modifier*) = {
     def navItem(thisTabName: String, tabId: String, url: Call, iconicName: String) = {
       val itemClass = if (tabId == tabName) "nav-item active" else "nav-item"
       li(`class` := itemClass)(a(href := url, `class` := "nav-link")(iconic(iconicName), s" $thisTabName"))
@@ -59,17 +59,16 @@ class MetaHtml extends Bootstrap(Tags) {
       navbar.basic(
         routes.MetaOAuth.index(),
         "musicmeta",
-          modifier(
-            ulClass(s"${navbar.Nav} $MrAuto")(
-              navItem("Home", "home", routes.MetaOAuth.index(), "home"),
-              navItem("Logs", "logs", routes.MetaOAuth.logs(), "list")
-            ),
-            ulClass(s"${navbar.Nav} ${navbar.Right}")(
-              li(`class` := "nav-item")(a(href := routes.MetaOAuth.logout(), `class` := "nav-link")("Logout"))
-            )
+        modifier(
+          ulClass(s"${navbar.Nav} $MrAuto")(
+            navItem("Logs", "logs", routes.MetaOAuth.logs(), "list")
+          ),
+          ulClass(s"${navbar.Nav} ${navbar.Right}")(
+            li(`class` := "nav-item")(a(href := routes.MetaOAuth.logout(), `class` := "nav-link")("Logout"))
+          )
         )
       ),
-      divContainer(content)
+      (if (wide) divClass("wide-content") else divContainer) (content)
     )
   }
 

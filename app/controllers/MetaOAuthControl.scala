@@ -22,7 +22,12 @@ class MetaOAuthControl(val actions: ActionBuilder[Request, AnyContent], creds: G
 
     def ejectWith(message: String) = Redirect(routes.MetaOAuth.eject()).flashing("message" -> message)
   }
-  val validator = StandardCodeValidator(CodeValidationConf.google(routes.MetaOAuthControl.googleCallback(), handler, AuthConf(creds.clientId, creds.clientSecret), http))
+  val authConf = CodeValidationConf.google(
+    routes.MetaOAuthControl.googleCallback(),
+    handler,
+    AuthConf(creds.clientId, creds.clientSecret),
+    http)
+  val validator = StandardCodeValidator(authConf)
 
   def googleStart = actions.async { req => validator.start(req) }
 

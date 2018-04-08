@@ -7,42 +7,69 @@ import scala.sys.process.Process
 
 import scala.util.Try
 
-lazy val p = PlayProject.server("musicmeta")
+lazy val musicmetaRoot = project.in(file("root"))
+  .settings(commonSettings: _*)
+  .aggregate(backend, frontend)
+
+lazy val backend = PlayProject.server("musicmeta")
   .enablePlugins(SystemdPlugin)
+  .settings(backendSettings: _*)
+
+lazy val frontend = project.in(file("frontend"))
+  .settings(frontendSettings: _*)
+  .enablePlugins(ScalaJSPlugin, ScalaJSWeb)
 
 val malliinaGroup = "com.malliina"
 val utilPlayDep = malliinaGroup %% "util-play" % "4.11.0"
 
-version := "1.11.0"
-scalaVersion := "2.12.5"
-scalacOptions := Seq("-unchecked", "-deprecation")
-libraryDependencies ++= Seq(
-  malliinaGroup %% "logstreams-client" % "0.0.9",
-  utilPlayDep,
-  utilPlayDep % Test classifier "tests"
+lazy val backendSettings = commonSettings ++ Seq(
+  scalaJSProjects := Seq(frontend),
+  pipelineStages in Assets := Seq(scalaJSPipeline),
+  libraryDependencies ++= Seq(
+    malliinaGroup %% "logstreams-client" % "0.0.9",
+    utilPlayDep,
+    utilPlayDep % Test classifier "tests"
+  ),
+  dependencyOverrides ++= Seq(
+    "com.typesafe.akka" %% "akka-stream" % "2.5.8",
+    "com.typesafe.akka" %% "akka-actor" % "2.5.8"
+  ),
+  httpPort in Linux := Option("disabled"),
+  httpsPort in Linux := Option("8460"),
+  maintainer := "Michael Skogberg <malliina123@gmail.com>",
+  javaOptions in Universal ++= {
+    val linuxName = (name in Linux).value
+    val metaHome = (appHome in Linux).value
+    Seq(
+      s"-Ddiscogs.oauth=/etc/$linuxName/discogs-oauth.key",
+      s"-Dgoogle.oauth=/etc/$linuxName/google-oauth.key",
+      s"-Dcover.dir=$metaHome/covers"
+    )
+  },
+  pipelineStages := Seq(digest, gzip),
+
+  buildInfoKeys := Seq[BuildInfoKey](name, version, scalaVersion, "gitHash" -> gitHash),
+  buildInfoPackage := "com.malliina.musicmeta",
+
+  linuxPackageSymlinks := linuxPackageSymlinks.value.filterNot(_.link == "/usr/bin/starter"),
 )
-dependencyOverrides ++= Seq(
-  "com.typesafe.akka" %% "akka-stream" % "2.5.8",
-  "com.typesafe.akka" %% "akka-actor" % "2.5.8"
-)
-httpPort in Linux := Option("disabled")
-httpsPort in Linux := Option("8460")
-maintainer := "Michael Skogberg <malliina123@gmail.com>"
-javaOptions in Universal ++= {
-  val linuxName = (name in Linux).value
-  val metaHome = (appHome in Linux).value
-  Seq(
-    s"-Ddiscogs.oauth=/etc/$linuxName/discogs-oauth.key",
-    s"-Dgoogle.oauth=/etc/$linuxName/google-oauth.key",
-    s"-Dcover.dir=$metaHome/covers"
+
+lazy val frontendSettings = commonSettings ++ Seq(
+  scalaJSUseMainModuleInitializer := true,
+  libraryDependencies ++= Seq(
+    "com.lihaoyi" %%% "scalatags" % "0.6.7",
+    "be.doeraene" %%% "scalajs-jquery" % "0.9.2",
+    "com.typesafe.play" %%% "play-json" % "2.6.9",
+    "com.malliina" %%% "primitives" % "1.4.0",
+    "org.scalatest" %%% "scalatest" % "3.0.5" % Test
   )
-}
-pipelineStages := Seq(digest, gzip)
+)
 
-buildInfoKeys := Seq[BuildInfoKey](name, version, scalaVersion, "gitHash" -> gitHash)
-buildInfoPackage := "com.malliina.musicmeta"
-
-linuxPackageSymlinks := linuxPackageSymlinks.value.filterNot(_.link == "/usr/bin/starter")
+lazy val commonSettings = Seq(
+  version := "1.11.0",
+  scalaVersion := "2.12.5",
+  scalacOptions := Seq("-unchecked", "-deprecation")
+)
 
 def gitHash: String =
   Try(Process("git rev-parse --short HEAD").lineStream.head).toOption.getOrElse("unknown")
