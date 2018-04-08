@@ -2,11 +2,12 @@ package tests
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
+import com.malliina.musicmeta.MetaHtml
 import com.malliina.oauth.{DiscoGsOAuthCredentials, GoogleOAuthCredentials}
 import com.malliina.play.ActorExecution
 import controllers.{Covers, MetaOAuth, MetaOAuthControl}
 import org.scalatest.FunSuite
-import play.api.http
+import play.api.{Mode, http}
 import play.api.mvc._
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
@@ -26,7 +27,7 @@ class APITests extends FunSuite {
 
   val oauthControl = new MetaOAuthControl(stubControllerComponents().actionBuilder, APITests.fakeGoogle)
   val exec = ActorExecution(actorSystem, mat)
-  val oauth = MetaOAuth("username", stubControllerComponents().actionBuilder, exec)
+  val oauth = MetaOAuth("username", MetaHtml(Mode.Test), stubControllerComponents().actionBuilder, exec)
   val covers = new Covers(oauth, APITests.fakeCreds, stubControllerComponents())
 
   test("respond to ping") {
