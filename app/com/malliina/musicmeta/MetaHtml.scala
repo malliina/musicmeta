@@ -44,7 +44,7 @@ class MetaHtml(jsName: String) extends Bootstrap(Tags) {
         tbody(id := "log-table-body")
       )
     ),
-    jsScript(versioned("frontend-fastopt.js"))
+    jsScript(versioned(jsName))
   )
 
   def eject(feedback: Option[UserFeedback]) =
