@@ -20,13 +20,13 @@ lazy val frontend = project.in(file("frontend"))
   .enablePlugins(ScalaJSPlugin, ScalaJSWeb)
 
 val malliinaGroup = "com.malliina"
-val utilPlayDep = malliinaGroup %% "util-play" % "4.11.0"
+val utilPlayDep = malliinaGroup %% "util-play" % "4.11.1"
 
 lazy val backendSettings = commonSettings ++ Seq(
   scalaJSProjects := Seq(frontend),
   pipelineStages in Assets := Seq(scalaJSPipeline),
   libraryDependencies ++= Seq(
-    malliinaGroup %% "logstreams-client" % "0.0.9",
+    malliinaGroup %% "logstreams-client" % "1.0.0",
     utilPlayDep,
     utilPlayDep % Test classifier "tests"
   ),
@@ -43,7 +43,11 @@ lazy val backendSettings = commonSettings ++ Seq(
     Seq(
       s"-Ddiscogs.oauth=/etc/$linuxName/discogs-oauth.key",
       s"-Dgoogle.oauth=/etc/$linuxName/google-oauth.key",
-      s"-Dcover.dir=$metaHome/covers"
+      s"-Dcover.dir=$metaHome/covers",
+      s"-Dconfig.file=/etc/$linuxName/production.conf",
+      s"-Dlogger.file=/etc/$linuxName/logback-prod.xml",
+      "-Dfile.encoding=UTF-8",
+      "-Dsun.jnu.encoding=UTF-8"
     )
   },
   pipelineStages := Seq(digest, gzip),
@@ -51,7 +55,7 @@ lazy val backendSettings = commonSettings ++ Seq(
   buildInfoKeys := Seq[BuildInfoKey](name, version, scalaVersion, "gitHash" -> gitHash),
   buildInfoPackage := "com.malliina.musicmeta",
 
-  linuxPackageSymlinks := linuxPackageSymlinks.value.filterNot(_.link == "/usr/bin/starter"),
+  linuxPackageSymlinks := linuxPackageSymlinks.value.filterNot(_.link == "/usr/bin/starter")
 )
 
 lazy val frontendSettings = commonSettings ++ Seq(
@@ -60,7 +64,7 @@ lazy val frontendSettings = commonSettings ++ Seq(
     "com.lihaoyi" %%% "scalatags" % "0.6.7",
     "be.doeraene" %%% "scalajs-jquery" % "0.9.2",
     "com.typesafe.play" %%% "play-json" % "2.6.9",
-    "com.malliina" %%% "primitives" % "1.4.0",
+    "com.malliina" %%% "primitives" % "1.5.2",
     "org.scalatest" %%% "scalatest" % "3.0.5" % Test
   )
 )
