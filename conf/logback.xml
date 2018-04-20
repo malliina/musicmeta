@@ -7,7 +7,6 @@
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
             <pattern>%d{HH:mm:ss.SSS} %-5level %logger{36} - %msg%n</pattern>
-            <!--<pattern>%coloredLevel %logger{15} - %message%n%xException{5}</pattern>-->
         </encoder>
     </appender>
     <appender name="LOGSTREAMS" class="com.malliina.logstreams.client.LogStreamsLogbackAppender">
@@ -25,7 +24,6 @@
 
     <root level="INFO">
         <appender-ref ref="STDOUT"/>
-        <appender-ref ref="FILE"/>
         <appender-ref ref="RX"/>
         <appender-ref ref="LOGSTREAMS"/>
     </root>
