@@ -27,8 +27,7 @@ object LogStreamer {
     new LogStreamer(UserAuthenticator.session().transform((rh, user) => Right(new AuthRequest(user, rh)))(ctx.executionContext), ctx)
 }
 
-class LogStreamer(auth: Authenticator[AuthRequest],
-                  ctx: ActorExecution) {
+class LogStreamer(auth: Authenticator[AuthRequest], ctx: ActorExecution) {
   lazy val jsonEvents = LogbackUtils.getAppender[BasicBoundedReplayRxAppender]("RX")
     .logEvents
     .tumblingBuffer(50.millis)
