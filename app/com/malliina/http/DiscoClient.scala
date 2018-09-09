@@ -3,7 +3,7 @@ package com.malliina.http
 import java.io.Closeable
 import java.nio.file.{Files, Path}
 
-import com.malliina.concurrent.ExecutionContexts
+import com.malliina.concurrent.Execution
 import com.malliina.http.DiscoClient.{keys, log}
 import com.malliina.oauth.DiscoGsOAuthCredentials
 import com.malliina.storage._
@@ -26,7 +26,7 @@ object DiscoClient {
   }
 
   def apply(creds: DiscoGsOAuthCredentials, coverDir: Path): DiscoClient =
-    new DiscoClient(creds, coverDir)(ExecutionContexts.cached)
+    new DiscoClient(creds, coverDir)(Execution.cached)
 }
 
 class DiscoClient(credentials: DiscoGsOAuthCredentials, coverDir: Path)(implicit ec: ExecutionContext) extends Closeable {

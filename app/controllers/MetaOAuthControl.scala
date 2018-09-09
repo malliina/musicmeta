@@ -3,7 +3,7 @@ package controllers
 import com.malliina.http.OkClient
 import com.malliina.oauth.GoogleOAuthCredentials
 import com.malliina.play.auth.{AuthConf, AuthError, AuthHandler, CodeValidationConf, StandardCodeValidator}
-import com.malliina.play.models.Email
+import com.malliina.values.Email
 import play.api.libs.json.Json
 import play.api.mvc.Results.{Redirect, Unauthorized}
 import play.api.mvc._

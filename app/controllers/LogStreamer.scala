@@ -5,8 +5,9 @@ import com.malliina.logbackrx.{BasicBoundedReplayRxAppender, LogbackUtils}
 import com.malliina.logstreams.client.LogEvents
 import com.malliina.play.ActorExecution
 import com.malliina.play.auth.{Authenticator, UserAuthenticator}
-import com.malliina.play.models.{AuthRequest, Username}
+import com.malliina.play.models.AuthRequest
 import com.malliina.play.ws.{ActorConfig, ObserverActor, Sockets}
+import com.malliina.values.Username
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.Call
 import rx.lang.scala.Observable
@@ -18,7 +19,7 @@ object LogStreamer {
               auth: Authenticator[Username],
               ctx: ActorExecution): Sockets[Username] = {
     new Sockets(auth, ctx) {
-      override def props(conf: ActorConfig[Username]) =
+      override def props(conf: ActorConfig[Username]): Props =
         Props(new ObserverActor(events, conf))
     }
   }

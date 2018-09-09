@@ -20,13 +20,15 @@ lazy val frontend = project.in(file("frontend"))
   .enablePlugins(ScalaJSPlugin, ScalaJSWeb)
 
 val malliinaGroup = "com.malliina"
-val utilPlayDep = malliinaGroup %% "util-play" % "4.11.1"
+val utilPlayVersion = "4.14.0"
+val utilPlayDep = malliinaGroup %% "util-play" % utilPlayVersion
 
 lazy val backendSettings = commonSettings ++ Seq(
   scalaJSProjects := Seq(frontend),
   pipelineStages in Assets := Seq(scalaJSPipeline),
   libraryDependencies ++= Seq(
-    malliinaGroup %% "logstreams-client" % "1.0.0",
+    malliinaGroup %% "logstreams-client" % "1.2.0",
+    malliinaGroup %% "play-social" % utilPlayVersion,
     utilPlayDep,
     utilPlayDep % Test classifier "tests"
   ),
@@ -63,15 +65,15 @@ lazy val frontendSettings = commonSettings ++ Seq(
   libraryDependencies ++= Seq(
     "com.lihaoyi" %%% "scalatags" % "0.6.7",
     "be.doeraene" %%% "scalajs-jquery" % "0.9.2",
-    "com.typesafe.play" %%% "play-json" % "2.6.9",
-    "com.malliina" %%% "primitives" % "1.5.2",
+    "com.typesafe.play" %%% "play-json" % "2.6.10",
+    "com.malliina" %%% "primitives" % "1.6.0",
     "org.scalatest" %%% "scalatest" % "3.0.5" % Test
   )
 )
 
 lazy val commonSettings = Seq(
-  version := "1.11.0",
-  scalaVersion := "2.12.5",
+  version := "1.12.0",
+  scalaVersion := "2.12.6",
   scalacOptions := Seq("-unchecked", "-deprecation")
 )
 

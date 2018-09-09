@@ -1,6 +1,6 @@
 package controllers
 
-import com.malliina.concurrent.ExecutionContexts.cached
+import com.malliina.concurrent.Execution.cached
 import com.malliina.musicmeta.{BuildMeta, MetaHtml, UserFeedback}
 import com.malliina.play.ActorExecution
 import com.malliina.play.controllers.{AuthBundle, BaseSecurity}
